@@ -7,7 +7,7 @@
 #ifndef STORAGE_QUERYEDGEPROPSROCESSOR_H_
 #define STORAGE_QUERYEDGEPROPSROCESSOR_H_
 
-#include "storage/QueryBaseProcessor.h"
+#include "storage/processors/QueryBaseProcessor.h"
 
 namespace nebula {
 namespace storage {
@@ -16,17 +16,20 @@ class QueryEdgePropsProcessor
     : public QueryBaseProcessor<cpp2::EdgePropRequest, cpp2::EdgePropResponse> {
 public:
     static QueryEdgePropsProcessor* instance(kvstore::KVStore* kvstore,
-                                             meta::SchemaManager* schemaMan) {
-        return new QueryEdgePropsProcessor(kvstore, schemaMan);
+                                             meta::SchemaManager* schemaMan,
+                                             meta::IndexManager* indexMan) {
+        return new QueryEdgePropsProcessor(kvstore, schemaMan, indexMan);
     }
 
     // It is one new method for QueryBaseProcessor.process.
     void process(const cpp2::EdgePropRequest& req);
 
 private:
-    explicit QueryEdgePropsProcessor(kvstore::KVStore* kvstore, meta::SchemaManager* schemaMan)
+    explicit QueryEdgePropsProcessor(kvstore::KVStore* kvstore,
+                                     meta::SchemaManager* schemaMan,
+                                     meta::IndexManager* indexMan)
         : QueryBaseProcessor<cpp2::EdgePropRequest,
-                             cpp2::EdgePropResponse>(kvstore, schemaMan) {}
+                             cpp2::EdgePropResponse>(kvstore, schemaMan, indexMan) {}
 
     kvstore::ResultCode collectEdgesProps(PartitionID partId,
                                           const cpp2::EdgeKey& edgeKey,

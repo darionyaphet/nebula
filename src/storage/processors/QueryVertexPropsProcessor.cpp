@@ -4,7 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include "storage/QueryVertexPropsProcessor.h"
+#include "storage/processors/QueryVertexPropsProcessor.h"
 #include <algorithm>
 #include "time/Duration.h"
 #include "storage/KeyUtils.h"

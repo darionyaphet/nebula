@@ -10,7 +10,7 @@
 #include <limits>
 #include "fs/TempDir.h"
 #include "storage/test/TestUtils.h"
-#include "storage/QueryBoundProcessor.h"
+#include "storage/processors/QueryBoundProcessor.h"
 #include "storage/KeyUtils.h"
 #include "dataman/RowSetReader.h"
 #include "dataman/RowReader.h"

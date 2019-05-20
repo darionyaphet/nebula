@@ -112,7 +112,12 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    auto handler = std::make_shared<StorageServiceHandler>(kvstore.get(), std::move(schemaMan));
+    auto indexMan = nebula::meta::IndexManager::create();
+    indexMan->init(metaClient.get);
+
+    auto handler = std::make_shared<StorageServiceHandler>(kvstore.get(),
+                                                           std::move(schemaMan),
+                                                           std::move(indexMan));
     gServer = std::make_unique<apache::thrift::ThriftServer>();
     CHECK(!!gServer) << "Failed to create the thrift server";
 

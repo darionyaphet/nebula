@@ -9,7 +9,7 @@
 #include <rocksdb/db.h>
 #include "fs/TempDir.h"
 #include "storage/test/TestUtils.h"
-#include "storage/QueryEdgePropsProcessor.h"
+#include "storage/processors/QueryEdgePropsProcessor.h"
 #include "storage/KeyUtils.h"
 #include "dataman/RowSetReader.h"
 #include "dataman/RowReader.h"

@@ -13,12 +13,12 @@
 #include <folly/futures/Future.h>
 #include "interface/gen-cpp2/storage_types.h"
 #include "kvstore/KVStore.h"
-#include "meta/SchemaManager.h"
 #include "dataman/RowSetWriter.h"
 #include "dataman/RowReader.h"
 #include "dataman/RowWriter.h"
 #include "storage/Collector.h"
 #include "meta/SchemaManager.h"
+#include "meta/IndexManager.h"
 #include "time/Duration.h"
 
 namespace nebula {
@@ -27,9 +27,12 @@ namespace storage {
 template<typename RESP>
 class BaseProcessor {
 public:
-    explicit BaseProcessor(kvstore::KVStore* kvstore, meta::SchemaManager* schemaMan)
+    explicit BaseProcessor(kvstore::KVStore* kvstore,
+                           meta::SchemaManager* schemaMan,
+                           meta::IndexManager* indexMan)
             : kvstore_(kvstore)
-            , schemaMan_(schemaMan) {}
+            , schemaMan_(schemaMan)
+            , indexMan_(indexMan) {}
 
     virtual ~BaseProcessor() = default;
 
@@ -73,6 +76,7 @@ protected:
 protected:
     kvstore::KVStore*       kvstore_ = nullptr;
     meta::SchemaManager*    schemaMan_ = nullptr;
+    meta::IndexManager*     indexMan_ = nullptr;
     RESP                    resp_;
     folly::Promise<RESP>    promise_;
     cpp2::ResponseCommon    result_;
@@ -86,6 +90,6 @@ protected:
 }  // namespace storage
 }  // namespace nebula
 
-#include "storage/BaseProcessor.inl"
+#include "storage/processors/BaseProcessor.inl"
 
 #endif  // STORAGE_BASEPROCESSOR_H_

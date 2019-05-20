@@ -51,7 +51,7 @@ public:
         return (totalReqsSent_ - failedReqs_) * 100 / totalReqsSent_;
     }
 
-    std::unordered_map<PartitionID, storage::cpp2::ErrorCode>& failedParts() {
+    std::unordered_map<PartitionID, cpp2::ErrorCode>& failedParts() {
         return failedParts_;
     }
 
@@ -65,7 +65,7 @@ private:
     size_t failedReqs_{0};
 
     Result result_{Result::ALL_SUCCEEDED};
-    std::unordered_map<PartitionID, storage::cpp2::ErrorCode> failedParts_;
+    std::unordered_map<PartitionID, cpp2::ErrorCode> failedParts_;
     int32_t maxLatency_{0};
     std::vector<Response> responses_;
 };
@@ -82,53 +82,53 @@ public:
                            meta::MetaClient *client = nullptr);
     ~StorageClient();
 
-    folly::SemiFuture<StorageRpcResponse<storage::cpp2::ExecResponse>> addVertices(
+    folly::SemiFuture<StorageRpcResponse<cpp2::ExecResponse>> addVertices(
         GraphSpaceID space,
-        std::vector<storage::cpp2::Vertex> vertices,
+        std::vector<cpp2::Vertex> vertices,
         bool overwritable,
         folly::EventBase* evb = nullptr);
 
-    folly::SemiFuture<StorageRpcResponse<storage::cpp2::ExecResponse>> addEdges(
+    folly::SemiFuture<StorageRpcResponse<cpp2::ExecResponse>> addEdges(
         GraphSpaceID space,
-        std::vector<storage::cpp2::Edge> edges,
+        std::vector<cpp2::Edge> edges,
         bool overwritable,
         folly::EventBase* evb = nullptr);
 
-    folly::SemiFuture<StorageRpcResponse<storage::cpp2::QueryResponse>> getNeighbors(
+    folly::SemiFuture<StorageRpcResponse<cpp2::QueryResponse>> getNeighbors(
         GraphSpaceID space,
         std::vector<VertexID> vertices,
         EdgeType edgeType,
         bool isOutBound,
         std::string filter,
-        std::vector<storage::cpp2::PropDef> returnCols,
+        std::vector<cpp2::PropDef> returnCols,
         folly::EventBase* evb = nullptr);
 
-    folly::SemiFuture<StorageRpcResponse<storage::cpp2::QueryStatsResponse>> neighborStats(
+    folly::SemiFuture<StorageRpcResponse<cpp2::QueryStatsResponse>> neighborStats(
         GraphSpaceID space,
         std::vector<VertexID> vertices,
         EdgeType edgeType,
         bool isOutBound,
         std::string filter,
-        std::vector<storage::cpp2::PropDef> returnCols,
+        std::vector<cpp2::PropDef> returnCols,
         folly::EventBase* evb = nullptr);
 
-    folly::SemiFuture<StorageRpcResponse<storage::cpp2::QueryResponse>> getVertexProps(
+    folly::SemiFuture<StorageRpcResponse<cpp2::QueryResponse>> getVertexProps(
         GraphSpaceID space,
         std::vector<VertexID> vertices,
-        std::vector<storage::cpp2::PropDef> returnCols,
+        std::vector<cpp2::PropDef> returnCols,
         folly::EventBase* evb = nullptr);
 
-    folly::SemiFuture<StorageRpcResponse<storage::cpp2::EdgePropResponse>> getEdgeProps(
+    folly::SemiFuture<StorageRpcResponse<cpp2::EdgePropResponse>> getEdgeProps(
         GraphSpaceID space,
-        std::vector<storage::cpp2::EdgeKey> edges,
-        std::vector<storage::cpp2::PropDef> returnCols,
+        std::vector<cpp2::EdgeKey> edges,
+        std::vector<cpp2::PropDef> returnCols,
         folly::EventBase* evb = nullptr);
 
 private:
     std::shared_ptr<folly::IOThreadPoolExecutor> ioThreadPool_;
     meta::MetaClient *client_{nullptr};
     std::unique_ptr<thrift::ThriftClientManager<
-                        storage::cpp2::StorageServiceAsyncClient>> clientsMan_;
+                        cpp2::StorageServiceAsyncClient>> clientsMan_;
 
 private:
     // Calculate the partition id for the given vertex id
@@ -138,7 +138,7 @@ private:
              class RemoteFunc,
              class Response =
                 typename std::result_of<
-                    RemoteFunc(storage::cpp2::StorageServiceAsyncClient*, const Request&)
+                    RemoteFunc(cpp2::StorageServiceAsyncClient*, const Request&)
                 >::type::value_type
             >
     folly::SemiFuture<StorageRpcResponse<Response>> collectResponse(

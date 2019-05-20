@@ -9,7 +9,7 @@
 #include <rocksdb/db.h>
 #include "fs/TempDir.h"
 #include "storage/test/TestUtils.h"
-#include "storage/AddEdgesProcessor.h"
+#include "storage/processors/AddEdgesProcessor.h"
 #include "storage/KeyUtils.h"
 
 
@@ -19,7 +19,7 @@ namespace storage {
 TEST(AddEdgesTest, SimpleTest) {
     fs::TempDir rootPath("/tmp/AddEdgesTest.XXXXXX");
     std::unique_ptr<kvstore::KVStore> kv(TestUtils::initKV(rootPath.path()));
-    auto* processor = AddEdgesProcessor::instance(kv.get(), nullptr);
+    auto* processor = AddEdgesProcessor::instance(kv.get(), nullptr, nullptr);
     LOG(INFO) << "Build AddEdgesRequest...";
     cpp2::AddEdgesRequest req;
     req.space_id = 0;

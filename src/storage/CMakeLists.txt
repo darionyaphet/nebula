@@ -3,12 +3,12 @@ add_library(
     StorageServiceHandler.cpp
     KeyUtils.cpp
     StorageHttpHandler.cpp
-    AddVerticesProcessor.cpp
-    AddEdgesProcessor.cpp
-    QueryBoundProcessor.cpp
-    QueryVertexPropsProcessor.cpp
-    QueryEdgePropsProcessor.cpp
-    QueryStatsProcessor.cpp
+    processors/AddVerticesProcessor.cpp
+    processors/AddEdgesProcessor.cpp
+    processors/QueryBoundProcessor.cpp
+    processors/QueryVertexPropsProcessor.cpp
+    processors/QueryEdgePropsProcessor.cpp
+    processors/QueryStatsProcessor.cpp
 )
 add_dependencies(
     storage_service_handler

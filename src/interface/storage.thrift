@@ -29,6 +29,9 @@ enum ErrorCode {
     E_TAG_PROP_NOT_FOUND = -22,
     E_IMPROPER_DATA_TYPE = -23,
 
+    // index failures
+    E_BUILD_INDEX_FAILURE = -31,
+
     E_UNKNOWN = -100,
 } (cpp.enum_strict)
 
@@ -160,6 +163,16 @@ struct AddEdgesRequest {
     3: bool overwritable,
 }
 
+struct BuildIndexRequest {
+    1: common.GraphSpaceID        space_id,
+    2: list<common.PartitionID>   partitions,
+}
+
+struct BuildIndexResponse {
+    1: ResultCode   code,
+    2: i32          latency_in_us,
+}
+
 service StorageService {
     QueryResponse getOutBound(1: GetNeighborsRequest req)
     QueryResponse getInBound(1: GetNeighborsRequest req)
@@ -173,5 +186,8 @@ service StorageService {
 
     ExecResponse addVertices(1: AddVerticesRequest req);
     ExecResponse addEdges(1: AddEdgesRequest req);
+
+    BuildIndexResponse   buildTagIndex(1: BuildIndexRequest req);
+    BuildIndexResponse   buildEdgeIndex(1: BuildIndexRequest req);
 }
 

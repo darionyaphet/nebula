@@ -8,7 +8,7 @@
 #define STORAGE_QUERYVERTEXPROPSPROCESSOR_H_
 
 #include "base/Base.h"
-#include "storage/QueryBoundProcessor.h"
+#include "storage/processors/QueryBoundProcessor.h"
 
 namespace nebula {
 namespace storage {
@@ -16,15 +16,18 @@ namespace storage {
 class QueryVertexPropsProcessor : public QueryBoundProcessor {
 public:
     static QueryVertexPropsProcessor* instance(kvstore::KVStore* kvstore,
-                                               meta::SchemaManager* schemaMan) {
-        return new QueryVertexPropsProcessor(kvstore, schemaMan);
+                                               meta::SchemaManager* schemaMan,
+                                               meta::IndexManager* indexMan) {
+        return new QueryVertexPropsProcessor(kvstore, schemaMan, indexMan);
     }
 
     void process(const cpp2::VertexPropRequest& req);
 
 private:
-    explicit QueryVertexPropsProcessor(kvstore::KVStore* kvstore, meta::SchemaManager* schemaMan)
-        : QueryBoundProcessor(kvstore, schemaMan, BoundType::OUT_BOUND) {}
+    explicit QueryVertexPropsProcessor(kvstore::KVStore* kvstore,
+                                       meta::SchemaManager* schemaMan,
+                                       meta::IndexManager* indexMan)
+        : QueryBoundProcessor(kvstore, schemaMan, indexMan, BoundType::OUT_BOUND) {}
 };
 
 }  // namespace storage

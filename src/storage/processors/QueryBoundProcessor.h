@@ -4,30 +4,32 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#ifndef STORAGE_QUERYSTATSPROCESSOR_H_
-#define STORAGE_QUERYSTATSPROCESSOR_H_
+#ifndef STORAGE_QUERYBOUNDPROCESSOR_H_
+#define STORAGE_QUERYBOUNDPROCESSOR_H_
 
 #include "base/Base.h"
-#include "storage/QueryBaseProcessor.h"
+#include "storage/processors/QueryBaseProcessor.h"
 
 namespace nebula {
 namespace storage {
 
-class QueryStatsProcessor
-    : public QueryBaseProcessor<cpp2::GetNeighborsRequest, cpp2::QueryStatsResponse> {
+class QueryBoundProcessor
+    : public QueryBaseProcessor<cpp2::GetNeighborsRequest, cpp2::QueryResponse> {
 public:
-    static QueryStatsProcessor* instance(kvstore::KVStore* kvstore,
+    static QueryBoundProcessor* instance(kvstore::KVStore* kvstore,
                                          meta::SchemaManager* schemaMan,
+                                         meta::IndexManager* indexMan,
                                          BoundType type = BoundType::OUT_BOUND) {
-        return new QueryStatsProcessor(kvstore, schemaMan, type);
+        return new QueryBoundProcessor(kvstore, schemaMan, indexMan, type);
     }
 
-private:
-    explicit QueryStatsProcessor(kvstore::KVStore* kvstore,
+protected:
+    explicit QueryBoundProcessor(kvstore::KVStore* kvstore,
                                  meta::SchemaManager* schemaMan,
+                                 meta::IndexManager* indexMan,
                                  BoundType type)
         : QueryBaseProcessor<cpp2::GetNeighborsRequest,
-                             cpp2::QueryStatsResponse>(kvstore, schemaMan, type) {}
+                             cpp2::QueryResponse>(kvstore, schemaMan, indexMan, type) {}
 
     kvstore::ResultCode processVertex(PartitionID partID,
                                       VertexID vId,
@@ -38,12 +40,10 @@ private:
                      EdgeContext& edgeContext,
                      int32_t retNum) override;
 
-    void calcResult(std::vector<PropContext>&& props);
-
 private:
-    StatsCollector collector_;
+    std::vector<cpp2::VertexData> vertices_;
 };
 
 }  // namespace storage
 }  // namespace nebula
-#endif  // STORAGE_QUERYSTATSPROCESSOR_H_
+#endif  // STORAGE_QUERYBOUNDPROCESSOR_H_

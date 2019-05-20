@@ -56,6 +56,9 @@ public:
         return sm;
     }
 
+    static std::unique_ptr<meta::IndexManager> mockIndexMan() {
+    }
+
     static std::vector<cpp2::Vertex> setupVertices(
             const PartitionID partitionID,
             const int64_t verticesNum,

@@ -7,6 +7,16 @@ add_library(
 )
 add_dependencies(schema_obj base_obj)
 
+add_library(
+    index_obj OBJECT
+    IndexManager.cpp
+    ServerBasedIndexManager.cpp
+)
+
+add_dependencies(
+    index_obj
+    base_obj
+)
 
 add_library(
     meta_service_handler OBJECT

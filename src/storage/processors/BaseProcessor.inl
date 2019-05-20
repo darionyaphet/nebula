@@ -5,7 +5,7 @@
  */
 
 #include "base/Base.h"
-#include "storage/BaseProcessor.h"
+#include "storage/processors/BaseProcessor.h"
 
 namespace nebula {
 namespace storage {

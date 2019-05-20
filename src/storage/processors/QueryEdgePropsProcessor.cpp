@@ -4,7 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include "storage/QueryEdgePropsProcessor.h"
+#include "storage/processors/QueryEdgePropsProcessor.h"
 #include <algorithm>
 #include "time/Duration.h"
 #include "storage/KeyUtils.h"

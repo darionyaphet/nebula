@@ -8,7 +8,7 @@
 #define STORAGE_ADDVERTICESPROCESSOR_H_
 
 #include "base/Base.h"
-#include "storage/BaseProcessor.h"
+#include "storage/processors/BaseProcessor.h"
 
 namespace nebula {
 namespace storage {
@@ -16,15 +16,18 @@ namespace storage {
 class AddVerticesProcessor : public BaseProcessor<cpp2::ExecResponse> {
 public:
     static AddVerticesProcessor* instance(kvstore::KVStore* kvstore,
-                                          meta::SchemaManager* schemaMan) {
-        return new AddVerticesProcessor(kvstore, schemaMan);
+                                          meta::SchemaManager* schemaMan,
+                                          meta::IndexManager* indexMan) {
+        return new AddVerticesProcessor(kvstore, schemaMan, indexMan);
     }
 
     void process(const cpp2::AddVerticesRequest& req);
 
 private:
-    explicit AddVerticesProcessor(kvstore::KVStore* kvstore, meta::SchemaManager* schemaMan)
-            : BaseProcessor<cpp2::ExecResponse>(kvstore, schemaMan) {}
+    explicit AddVerticesProcessor(kvstore::KVStore* kvstore,
+                                  meta::SchemaManager* schemaMan,
+                                  meta::IndexManager* indexMan)
+            : BaseProcessor<cpp2::ExecResponse>(kvstore, schemaMan, indexMan) {}
 };
 
 

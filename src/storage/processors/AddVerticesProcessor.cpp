@@ -4,7 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-#include "storage/AddVerticesProcessor.h"
+#include "storage/processors/AddVerticesProcessor.h"
 #include <algorithm>
 #include <limits>
 #include "time/TimeUtils.h"

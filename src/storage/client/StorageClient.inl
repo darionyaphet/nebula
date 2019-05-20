@@ -103,7 +103,7 @@ folly::SemiFuture<StorageRpcResponse<Response>> StorageClient::collectResponse(
                         VLOG(3) << "Exception! Failed part " << part.first;
                         context->resp.failedParts().emplace(
                             part.first,
-                            storage::cpp2::ErrorCode::E_RPC_FAILURE);
+                            cpp2::ErrorCode::E_RPC_FAILURE);
                     }
                     context->resp.markFailure();
                 } else {
@@ -114,7 +114,7 @@ folly::SemiFuture<StorageRpcResponse<Response>> StorageClient::collectResponse(
                         VLOG(3) << "Failure! Failed part " << code.get_part_id()
                                 << ", failed code " << static_cast<int32_t>(code.get_code());
                         hasFailure = true;
-                        if (code.get_code() == storage::cpp2::ErrorCode::E_LEADER_CHANGED) {
+                        if (code.get_code() == cpp2::ErrorCode::E_LEADER_CHANGED) {
                             // TODO Need to retry the new leader
                             LOG(FATAL) << "Not implmented";
                         } else {

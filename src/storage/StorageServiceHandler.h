@@ -12,6 +12,7 @@
 #include "interface/gen-cpp2/StorageService.h"
 #include "kvstore/KVStore.h"
 #include "meta/SchemaManager.h"
+#include "meta/IndexManager.h"
 
 namespace nebula {
 namespace storage {
@@ -21,9 +22,11 @@ class StorageServiceHandler final : public cpp2::StorageServiceSvIf {
 
 public:
     StorageServiceHandler(kvstore::KVStore* kvstore,
-                          std::unique_ptr<meta::SchemaManager> schemaMan)
+                          std::unique_ptr<meta::SchemaManager> schemaMan,
+                          std::unique_ptr<meta::IndexManager> indexMan)
         : kvstore_(kvstore)
-        , schemaMan_(std::move(schemaMan)) {}
+        , schemaMan_(std::move(schemaMan))
+        , indexMan_(std::move(indexMan)) {}
 
     folly::Future<cpp2::QueryResponse>
     future_getOutBound(const cpp2::GetNeighborsRequest& req) override;
@@ -52,6 +55,7 @@ public:
 private:
     kvstore::KVStore* kvstore_ = nullptr;
     std::unique_ptr<meta::SchemaManager> schemaMan_;
+    std::unique_ptr<meta::IndexManager>  indexMan_;
 };
 
 }  // namespace storage

@@ -3,12 +3,12 @@
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
-#include "storage/QueryBaseProcessor.h"
+
 #include <algorithm>
 #include "storage/KeyUtils.h"
 #include "dataman/RowReader.h"
 #include "dataman/RowWriter.h"
-
+#include "storage/processors/BaseProcessor.h"
 
 namespace nebula {
 namespace storage {

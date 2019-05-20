@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include "fs/TempDir.h"
 #include "storage/test/TestUtils.h"
-#include "storage/AddVerticesProcessor.h"
+#include "storage/processors/AddVerticesProcessor.h"
 #include "storage/StorageServiceHandler.h"
 #include "storage/KeyUtils.h"
 

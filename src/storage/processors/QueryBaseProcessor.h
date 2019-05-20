@@ -8,7 +8,7 @@
 #define STORAGE_QUERYBASEPROCESSOR_H_
 
 #include "base/Base.h"
-#include "storage/BaseProcessor.h"
+#include "storage/processors/BaseProcessor.h"
 #include "storage/Collector.h"
 
 namespace nebula {
@@ -42,8 +42,9 @@ public:
 protected:
     explicit QueryBaseProcessor(kvstore::KVStore* kvstore,
                                 meta::SchemaManager* schemaMan,
+                                meta::IndexManager* indexMan,
                                 BoundType type = BoundType::OUT_BOUND)
-        : BaseProcessor<RESP>(kvstore, schemaMan)
+        : BaseProcessor<RESP>(kvstore, schemaMan, indexMan)
         , type_(type) {}
     /**
      * Check whether current operation on the data is valid or not.
@@ -94,6 +95,6 @@ protected:
 }  // namespace storage
 }  // namespace nebula
 
-#include "storage/QueryBaseProcessor.inl"
+#include "storage/processors/QueryBaseProcessor.inl"
 
 #endif  // STORAGE_QUERYBASEPROCESSOR_H_

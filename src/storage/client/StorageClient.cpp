@@ -26,7 +26,7 @@ StorageClient::StorageClient(std::shared_ptr<folly::IOThreadPoolExecutor> thread
         client_ = client;
     }
     clientsMan_
-        = std::make_unique<thrift::ThriftClientManager<storage::cpp2::StorageServiceAsyncClient>>();
+        = std::make_unique<thrift::ThriftClientManager<cpp2::StorageServiceAsyncClient>>();
 }
 
 
@@ -71,7 +71,7 @@ folly::SemiFuture<StorageRpcResponse<cpp2::ExecResponse>> StorageClient::addVert
 
 folly::SemiFuture<StorageRpcResponse<cpp2::ExecResponse>> StorageClient::addEdges(
         GraphSpaceID space,
-        std::vector<storage::cpp2::Edge> edges,
+        std::vector<cpp2::Edge> edges,
         bool overwritable,
         folly::EventBase* evb) {
     auto clusters = clusterIdsToHosts(
