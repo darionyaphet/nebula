@@ -32,7 +32,7 @@ RocksEngine::RocksEngine(GraphSpaceID spaceId,
 
     rocksdb::Options options;
     rocksdb::DB* db = nullptr;
-    rocksdb::Status status = initRocksdbOptions(options);
+    auto status = initRocksdbOptions(options);
     CHECK(status.ok());
     if (mergeOp != nullptr) {
         options.merge_operator = mergeOp;
@@ -43,6 +43,11 @@ RocksEngine::RocksEngine(GraphSpaceID spaceId,
     status = rocksdb::DB::Open(options, dataPath_, &db);
     CHECK(status.ok());
     db_.reset(db);
+
+    rocksdb::ColumnFamilyHandle *indexHandle;
+    status = db_->CreateColumnFamily(rocksdb::ColumnFamilyOptions(), "index", &indexHandle);
+    CHECK(status.ok());
+    indexHandle_.reset(indexHandle);
     partsNum_ = allParts().size();
 }
 

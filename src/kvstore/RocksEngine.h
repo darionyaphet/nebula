@@ -147,6 +147,7 @@ private:
     std::string  dataPath_;
     std::string  extraPath_;
     std::unique_ptr<rocksdb::DB> db_{nullptr};
+    std::unique_ptr<rocksdb::ColumnFamilyHandle> indexHandle_{nullptr};
     int32_t partsNum_ = -1;
 };
 
