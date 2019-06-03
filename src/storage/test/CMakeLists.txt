@@ -1,3 +1,6 @@
+include_directories($ENV{JAVA_HOME}/include
+                    $ENV{JAVA_HOME}/include/linux)
+
 add_library(
     adHocSchema_obj OBJECT
     AdHocSchemaManager.cpp
@@ -227,6 +230,8 @@ add_executable(
 )
 nebula_link_libraries(
     storage_client_test
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     ${ROCKSDB_LIBRARIES}
     ${THRIFT_LIBRARIES}
     wangle
@@ -262,6 +267,8 @@ add_executable(
 
  nebula_link_libraries(
     storage_http_test
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     proxygenhttpserver
     proxygenlib
     ${ROCKSDB_LIBRARIES}

@@ -151,6 +151,11 @@ find_package(FLEX REQUIRED)
 find_package(Readline REQUIRED)
 find_package(NCURSES REQUIRED)
 find_package(LibLZMA MODULE)
+
+find_package(JNI REQUIRED)
+include_directories(${JAVA_INCLUDE_PATH})
+include_directories(${JAVA_INCLUDE_PATH2})
+
 if(NOT asan AND NOT ENABLE_NATIVE)
     find_package(PCHSupport)
     add_compile_options(-Winvalid-pch)
@@ -195,6 +200,7 @@ include_directories(SYSTEM ${NEBULA_HOME}/third-party/snappy/_install/include)
 include_directories(SYSTEM ${NEBULA_HOME}/third-party/wangle/_install/include)
 include_directories(SYSTEM ${NEBULA_HOME}/third-party/zlib/_install/include)
 include_directories(SYSTEM ${NEBULA_HOME}/third-party/zstd/_install/include)
+include_directories(SYSTEM ${NEBULA_HOME}/third-party/hdfs/_install/include)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 include_directories(SYSTEM ${OPENSSL_INCLUDE_DIR})
 include_directories(SYSTEM ${KRB5_INCLUDE_DIRS})
@@ -223,6 +229,7 @@ link_directories(
     ${NEBULA_HOME}/third-party/wangle/_install/lib
     ${NEBULA_HOME}/third-party/zlib/_install/lib
     ${NEBULA_HOME}/third-party/zstd/_install/lib
+    ${NEBULA_HOME}/third-party/hdfs/_install/lib
     ${Boost_LIBRARY_DIRS}
     ${KRB5_LIBRARY_DIRS}
 )
@@ -242,6 +249,10 @@ set(THRIFT_LIBRARIES
 )
 
 set(ROCKSDB_LIBRARIES ${NEBULA_HOME}/third-party/rocksdb/_install/lib/librocksdb.a)
+
+set(HDFS_LIBRARIES ${NEBULA_HOME}/third-party/hdfs/_install/lib/libhdfs.a)
+
+set(JVM_LIB $ENV{JAVA_HOME}/jre/lib/amd64/server/libjvm.so)
 
 # All compression libraries
 set(COMPRESSION_LIBRARIES bz2 snappy zstd z)

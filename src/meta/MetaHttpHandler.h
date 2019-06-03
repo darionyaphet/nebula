@@ -40,11 +40,15 @@ private:
     std::string readValue(std::string& statusName);
     void readAllValue(folly::dynamic& vals);
     folly::dynamic getStatus();
-    std::string toStr(folly::dynamic& vals) const;
+    std::string toString(folly::dynamic& vals) const;
+
+    bool dispatchSSTFiles(const std::string& url, int port,
+                          const std::string& path);
 
 private:
     HttpCode err_{HttpCode::SUCCEEDED};
     bool returnJson_{false};
+    std::string method;
     std::vector<std::string> statusNames_;
     std::vector<std::string> statusAllNames_{"status"};
 };

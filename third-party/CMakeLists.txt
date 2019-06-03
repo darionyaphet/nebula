@@ -44,10 +44,11 @@ add_subdirectory(snappy)
 add_subdirectory(wangle)
 add_subdirectory(zlib)
 add_subdirectory(zstd)
+add_subdirectory(hdfs)
 
 add_custom_target(
     third-party ALL
-    DEPENDS tgt_fbthrift tgt_rocksdb tgt_proxygen tgt_googletest tgt_jemalloc
+    DEPENDS tgt_fbthrift tgt_rocksdb tgt_proxygen tgt_googletest tgt_jemalloc tgt_hdfs
 )
 
 add_custom_target(

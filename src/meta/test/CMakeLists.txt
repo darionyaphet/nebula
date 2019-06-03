@@ -36,6 +36,8 @@ add_executable(
 )
 nebula_link_libraries(
     processor_test
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     proxygenhttpserver
     proxygenlib
     ${ROCKSDB_LIBRARIES}
@@ -63,6 +65,8 @@ add_executable(
 )
 nebula_link_libraries(
     hb_processor_test
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     proxygenhttpserver
     proxygenlib
     ${ROCKSDB_LIBRARIES}
@@ -91,6 +95,8 @@ add_executable(
 )
 nebula_link_libraries(
     meta_client_test
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     proxygenhttpserver
     proxygenlib
     ${ROCKSDB_LIBRARIES}
@@ -138,6 +144,8 @@ add_executable(
 )
 nebula_link_libraries(
     meta_http_test
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     proxygenhttpserver
     proxygenlib
     ${ROCKSDB_LIBRARIES}

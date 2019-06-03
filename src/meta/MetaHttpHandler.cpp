@@ -4,6 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
+#include <hdfs/hdfs.h>
 #include "meta/MetaHttpHandler.h"
 #include "webservice/Common.h"
 #include <proxygen/httpserver/RequestHandler.h>
@@ -21,13 +22,16 @@ using proxygen::ResponseBuilder;
 
 void MetaHttpHandler::onRequest(std::unique_ptr<HTTPMessage> headers) noexcept {
     if (headers->getMethod().value() != HTTPMethod::GET) {
-        // Unsupported method
         err_ = HttpCode::E_UNSUPPORTED_METHOD;
         return;
     }
 
-    if (headers->getQueryParamPtr("returnjson") != nullptr) {
+    if (headers->hasQueryParam("returnjson")) {
         returnJson_ = true;
+    }
+
+    if (headers->hasQueryParam("method")) {
+        method = headers->getQueryParam("method");
     }
 
     auto* statusStr = headers->getQueryParamPtr("daemon");
@@ -54,17 +58,27 @@ void MetaHttpHandler::onEOM() noexcept {
     }
 
     // read meta daemon status
-    folly::dynamic vals = getStatus();
-    if (returnJson_) {
+    if (method == "status") {
+        folly::dynamic vals = getStatus();
+        if (returnJson_) {
+            ResponseBuilder(downstream_)
+                .status(200, "OK")
+                .body(folly::toJson(vals))
+                .sendWithEOM();
+        } else {
+            ResponseBuilder(downstream_)
+                .status(200, "OK")
+                .body(toString(vals))
+                .sendWithEOM();
+        }
+    } else if (method == "download") {
+        auto flag = dispatchSSTFiles("127.0.0.1", 9000, "/data");
+        UNUSED(flag);
         ResponseBuilder(downstream_)
             .status(200, "OK")
-            .body(folly::toJson(vals))
+            .body("download")
             .sendWithEOM();
     } else {
-        ResponseBuilder(downstream_)
-            .status(200, "OK")
-            .body(toStr(vals))
-            .sendWithEOM();
     }
 }
 
@@ -107,7 +121,7 @@ std::string MetaHttpHandler::readValue(std::string& statusName) {
 
 void MetaHttpHandler::readAllValue(folly::dynamic& vals) {
     for (auto& sn : statusAllNames_) {
-        std::string statusValue = readValue(sn);
+        auto statusValue = readValue(sn);
         addOneStatus(vals, sn, statusValue);
     }
 }
@@ -120,7 +134,7 @@ folly::dynamic MetaHttpHandler::getStatus() {
         readAllValue(status);
     } else {
         for (auto& sn : statusNames_) {
-            std::string statusValue = readValue(sn);
+            auto statusValue = readValue(sn);
             addOneStatus(status, sn, statusValue);
         }
     }
@@ -128,7 +142,7 @@ folly::dynamic MetaHttpHandler::getStatus() {
 }
 
 
-std::string MetaHttpHandler::toStr(folly::dynamic& vals) const {
+std::string MetaHttpHandler::toString(folly::dynamic& vals) const {
     std::stringstream ss;
     for (auto& counter : vals) {
         auto& val = counter["value"];
@@ -137,6 +151,28 @@ std::string MetaHttpHandler::toStr(folly::dynamic& vals) const {
            << "\n";
     }
     return ss.str();
+}
+
+bool MetaHttpHandler::dispatchSSTFiles(const std::string& url, int port,
+                                       const std::string& path) {
+    auto client = hdfsConnect(url.c_str(), port);
+    if (!client) {
+        LOG(ERROR) << "Connect to HDFS " << url << ":" << port << " Failed";
+        return false;
+    }
+
+    LOG(INFO) << "Connect to HDFS " << url << ":" << port << " Successfully";
+    if (hdfsExists(client, path.c_str()) == -1) {
+        LOG(ERROR) << "SST Files " << path << " not exist";
+        return false;
+    }
+
+    int size;
+    auto *info = hdfsListDirectory(client, path.c_str(), &size);
+    for (auto i = 0; i < size; i++) {
+        LOG(INFO) << info[i].mName;
+    }
+    return true;
 }
 
 }  // namespace meta

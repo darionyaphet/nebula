@@ -40,7 +40,7 @@ private:
     std::string readValue(std::string& statusName);
     void readAllValue(folly::dynamic& vals);
     folly::dynamic getStatus();
-    std::string toStr(folly::dynamic& vals) const;
+    std::string toString(folly::dynamic& vals) const;
 
 private:
     HttpCode err_{HttpCode::SUCCEEDED};

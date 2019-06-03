@@ -1,3 +1,6 @@
+include_directories($ENV{JAVA_HOME}/include
+                    $ENV{JAVA_HOME}/include/linux)
+
 add_library(
     schema_obj OBJECT
     SchemaManager.cpp

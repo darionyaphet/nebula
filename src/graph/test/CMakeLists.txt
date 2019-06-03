@@ -26,6 +26,8 @@ add_executable(
 
 nebula_link_libraries(
     session_manager_test
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     ${THRIFT_LIBRARIES}
     ${ROCKSDB_LIBRARIES}
     wangle
@@ -71,6 +73,8 @@ add_executable(
 
 nebula_link_libraries(
     query_engine_test
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     ${THRIFT_LIBRARIES}
     ${ROCKSDB_LIBRARIES}
     wangle
@@ -110,6 +114,8 @@ add_executable(
 )
 nebula_link_libraries(
     go_test
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     ${THRIFT_LIBRARIES}
     ${ROCKSDB_LIBRARIES}
     wangle
@@ -153,6 +159,8 @@ add_executable(
 )
 nebula_link_libraries(
     graph_http_test
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     proxygenhttpserver
     proxygenlib
     ${THRIFT_LIBRARIES}

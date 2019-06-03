@@ -21,7 +21,6 @@ using proxygen::ResponseBuilder;
 
 void StorageHttpHandler::onRequest(std::unique_ptr<HTTPMessage> headers) noexcept {
     if (headers->getMethod().value() != HTTPMethod::GET) {
-        // Unsupported method
         err_ = HttpCode::E_UNSUPPORTED_METHOD;
         return;
     }
@@ -63,7 +62,7 @@ void StorageHttpHandler::onEOM() noexcept {
     } else {
         ResponseBuilder(downstream_)
             .status(200, "OK")
-            .body(toStr(vals))
+            .body(toString(vals))
             .sendWithEOM();
     }
 }
@@ -107,7 +106,7 @@ std::string StorageHttpHandler::readValue(std::string& statusName) {
 
 void StorageHttpHandler::readAllValue(folly::dynamic& vals) {
     for (auto& sn : statusAllNames_) {
-        std::string statusValue = readValue(sn);
+        auto statusValue = readValue(sn);
         addOneStatus(vals, sn, statusValue);
     }
 }
@@ -120,7 +119,7 @@ folly::dynamic StorageHttpHandler::getStatus() {
         readAllValue(status);
     } else {
         for (auto& sn : statusNames_) {
-            std::string statusValue = readValue(sn);
+            auto statusValue = readValue(sn);
             addOneStatus(status, sn, statusValue);
         }
     }
@@ -128,7 +127,7 @@ folly::dynamic StorageHttpHandler::getStatus() {
 }
 
 
-std::string StorageHttpHandler::toStr(folly::dynamic& vals) const {
+std::string StorageHttpHandler::toString(folly::dynamic& vals) const {
     std::stringstream ss;
     for (auto& counter : vals) {
         auto& val = counter["value"];

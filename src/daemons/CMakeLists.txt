@@ -1,3 +1,6 @@
+include_directories($ENV{JAVA_HOME}/include
+                    $ENV{JAVA_HOME}/include/linux)
+
 add_executable(
     nebula-graphd
     GraphDaemon.cpp
@@ -57,6 +60,8 @@ add_executable(
 )
 nebula_link_libraries(
     nebula-storaged
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     proxygenhttpserver
     proxygenlib
     ${ROCKSDB_LIBRARIES}
@@ -87,6 +92,8 @@ add_executable(
 )
 nebula_link_libraries(
     nebula-metad
+    ${HDFS_LIBRARIES}
+    ${JVM_LIB}
     proxygenhttpserver
     proxygenlib
     ${ROCKSDB_LIBRARIES}

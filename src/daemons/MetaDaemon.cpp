@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     }
 
     LOG(INFO) << "Starting Meta HTTP Service";
-    nebula::WebService::registerHandler("/status", [] {
+    nebula::WebService::registerHandler("/meta", [] {
         return new nebula::meta::MetaHttpHandler();
     });
     status = nebula::WebService::start();
