@@ -209,7 +209,7 @@ void FetchVerticesExecutor::processResult(RpcResponse &&result) {
             };
             for (auto *column : yields_) {
                 auto *expr = column->expr();
-                auto value = expr->eval();
+                auto value = expr->eval().get();
                 if (!value.ok()) {
                     onError_(value.status());
                     return;
@@ -258,7 +258,7 @@ Status FetchVerticesExecutor::setupVidsFromExpr() {
         if (!status.ok()) {
             break;
         }
-        auto value = expr->eval();
+        auto value = expr->eval().get();
         if (!value.ok()) {
             return value.status();
         }

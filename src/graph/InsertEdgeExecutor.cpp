@@ -88,7 +88,7 @@ StatusOr<std::vector<storage::cpp2::Edge>> InsertEdgeExecutor::prepareEdges() {
         if (!status.ok()) {
             return status;
         }
-        auto ovalue = sid->eval();
+        auto ovalue = sid->eval().get();
         if (!ovalue.ok()) {
             return ovalue.status();
         }
@@ -105,7 +105,7 @@ StatusOr<std::vector<storage::cpp2::Edge>> InsertEdgeExecutor::prepareEdges() {
         if (!status.ok()) {
             return status;
         }
-        ovalue = did->eval();
+        ovalue = did->eval().get();
         if (!ovalue.ok()) {
             return ovalue.status();
         }
@@ -135,7 +135,7 @@ StatusOr<std::vector<storage::cpp2::Edge>> InsertEdgeExecutor::prepareEdges() {
                 return status;
             }
 
-            ovalue = expr->eval();
+            ovalue = expr->eval().get();
             if (!ovalue.ok()) {
                 return ovalue.status();
             }

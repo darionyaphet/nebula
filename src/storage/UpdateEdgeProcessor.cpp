@@ -18,7 +18,7 @@ void UpdateEdgeProcessor::onProcessFinished(int32_t retNum) {
         respScheam.columns.reserve(retNum);
         RowWriter writer(nullptr);
         for (auto& exp : returnColumnsExp_) {
-            auto value = exp->eval();
+            auto value = exp->eval().get();
             if (!value.ok()) {
                 LOG(ERROR) << value.status();
                 return;
@@ -146,7 +146,7 @@ kvstore::ResultCode UpdateEdgeProcessor::collectEdgesProps(
         }
         for (auto index = 0UL; index < constSchema->getNumFields(); index++) {
             auto propName = std::string(constSchema->getFieldName(index));
-            OptVariantType value = RowReader::getDefaultProp(constSchema.get(), propName);
+            StatusOr<VariantType> value = RowReader::getDefaultProp(constSchema.get(), propName);
             if (!value.ok()) {
                 return kvstore::ResultCode::ERR_UNKNOWN;
             }
@@ -174,7 +174,7 @@ std::string UpdateEdgeProcessor::updateAndWriteBack() {
         }
         auto vexp = std::move(exp).value();
         vexp->setContext(this->expCtx_.get());
-        auto value = vexp->eval();
+        auto value = vexp->eval().get();
         if (!value.ok()) {
             return std::string("");
         }
@@ -259,7 +259,7 @@ bool UpdateEdgeProcessor::checkFilter(const PartitionID partId,
     };
 
     if (this->exp_ != nullptr) {
-        auto filterResult = this->exp_->eval();
+        auto filterResult = this->exp_->eval().get();
         if (!filterResult.ok() || !Expression::asBool(filterResult.value())) {
             VLOG(1) << "Filter skips the update";
             return false;

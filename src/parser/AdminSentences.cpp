@@ -121,7 +121,7 @@ std::string ConfigRowItem::toString() const {
         ss << *name_;
     }
     if (value_ != nullptr) {
-        auto v = value_->eval();
+        auto v = value_->eval().get();
         if (!v.ok()) {
             ss << "= ";
         } else {

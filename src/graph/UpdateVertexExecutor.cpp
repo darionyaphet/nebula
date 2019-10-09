@@ -35,7 +35,7 @@ Status UpdateVertexExecutor::prepare() {
         if (!status.ok()) {
             break;
         }
-        auto vid = sentence_->getVid()->eval();
+        auto vid = sentence_->getVid()->eval().get();
         if (!vid.ok() || !Expression::isInt(vid.value())) {
             status = Status::Error("Get Vertex ID failure!");
             break;

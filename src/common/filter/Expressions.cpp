@@ -555,7 +555,7 @@ OptVariantType FunctionCallExpression::eval() const {
     std::vector<VariantType> args;
 
     for (auto it = args_.cbegin(); it != args_.cend(); ++it) {
-        auto result = (*it)->eval();
+        auto result = (*it)->eval().get();
         if (!result.ok()) {
             return result;
         }
@@ -661,7 +661,7 @@ std::string UnaryExpression::toString() const {
 }
 
 OptVariantType UnaryExpression::eval() const {
-    auto value = operand_->eval();
+    auto value = operand_->eval().get();
     if (value.ok()) {
         if (op_ == PLUS) {
             return value;
@@ -736,7 +736,7 @@ std::string TypeCastingExpression::toString() const {
 
 
 OptVariantType TypeCastingExpression::eval() const {
-    auto result = operand_->eval();
+    auto result = operand_->eval().get();
     if (!result.ok()) {
         return result;
     }
@@ -798,8 +798,8 @@ std::string ArithmeticExpression::toString() const {
 }
 
 OptVariantType ArithmeticExpression::eval() const {
-    auto left = left_->eval();
-    auto right = right_->eval();
+    auto left = left_->eval().get();
+    auto right = right_->eval().get();
     if (!left.ok()) {
         return left;
     }
@@ -939,8 +939,8 @@ std::string RelationalExpression::toString() const {
 }
 
 OptVariantType RelationalExpression::eval() const {
-    auto left = left_->eval();
-    auto right = right_->eval();
+    auto left = left_->eval().get();
+    auto right = right_->eval().get();
 
     if (!left.ok()) {
         return left;
@@ -1066,8 +1066,8 @@ std::string LogicalExpression::toString() const {
 }
 
 OptVariantType LogicalExpression::eval() const {
-    auto left = left_->eval();
-    auto right = right_->eval();
+    auto left = left_->eval().get();
+    auto right = right_->eval().get();
 
     if (!left.ok()) {
         return left;

@@ -16,7 +16,7 @@
 namespace nebula {
 
 class Cord;
-using OptVariantType = StatusOr<VariantType>;
+using OptVariantType = folly::Future<StatusOr<VariantType>>;
 
 enum class ColumnType {
     INT, STRING, DOUBLE, BIGINT, BOOL, TIMESTAMP,

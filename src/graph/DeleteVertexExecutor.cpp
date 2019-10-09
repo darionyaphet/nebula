@@ -16,7 +16,7 @@ DeleteVertexExecutor::DeleteVertexExecutor(Sentence *sentence,
 }
 
 Status DeleteVertexExecutor::prepare() {
-    auto ovalue = sentence_->vid()->eval();
+    auto ovalue = sentence_->vid()->eval().get();
     auto v = ovalue.value();
     if (!Expression::isInt(v)) {
         return Status::Error("Vertex ID should be of type integer");

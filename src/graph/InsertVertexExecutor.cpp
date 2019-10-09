@@ -91,7 +91,7 @@ StatusOr<std::vector<storage::cpp2::Vertex>> InsertVertexExecutor::prepareVertic
         if (!status.ok()) {
             return status;
         }
-        auto ovalue = rid->eval();
+        auto ovalue = rid->eval().get();
         if (!ovalue.ok()) {
             return ovalue.status();
         }
@@ -110,7 +110,7 @@ StatusOr<std::vector<storage::cpp2::Vertex>> InsertVertexExecutor::prepareVertic
             if (!status.ok()) {
                 return status;
             }
-            ovalue = expr->eval();
+            ovalue = expr->eval().get();
             if (!ovalue.ok()) {
                 return ovalue.status();
             }
