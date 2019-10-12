@@ -44,7 +44,7 @@ Status UpdateEdgeExecutor::prepare() {
         if (!status.ok()) {
             break;
         }
-        auto src = sid->eval();
+        auto src = sid->eval().get();
         if (!src.ok() || !Expression::isInt(src.value())) {
             status = Status::Error("SRC Vertex ID should be of type integer");
             break;
@@ -57,7 +57,7 @@ Status UpdateEdgeExecutor::prepare() {
         if (!status.ok()) {
             break;
         }
-        auto dst = did->eval();
+        auto dst = did->eval().get();
         if (!dst.ok() || !Expression::isInt(dst.value())) {
             status = Status::Error("DST Vertex ID should be of type integer");
             break;

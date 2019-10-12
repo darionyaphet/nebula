@@ -438,7 +438,7 @@ kvstore::ResultCode QueryBaseProcessor<REQ, RESP>::collectEdgeProps(
                             << prop << ", value " << it->second;
                     return it->second;
                 };
-                auto value = exp_->eval();
+                auto value = exp_->eval().get();
                 if (value.ok() && !Expression::asBool(value.value())) {
                     VLOG(1) << "Filter the edge "
                             << vId << "-> " << dstId << "@" << rank << ":" << edgeType;

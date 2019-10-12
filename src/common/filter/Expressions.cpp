@@ -119,7 +119,7 @@ std::string AliasPropertyExpression::toString() const {
     return buf;
 }
 
-OptVariantType AliasPropertyExpression::eval() const {
+folly::Future<OptVariantType> AliasPropertyExpression::eval() const {
     return context_->getters().getAliasProp(*alias_, *prop_);
 }
 
@@ -166,7 +166,7 @@ Status InputPropertyExpression::prepare() {
 }
 
 
-OptVariantType InputPropertyExpression::eval() const {
+folly::Future<OptVariantType> InputPropertyExpression::eval() const {
     return context_->getters().getInputProp(*prop_);
 }
 
@@ -191,7 +191,7 @@ const char* InputPropertyExpression::decode(const char *pos, const char *end) {
 }
 
 
-OptVariantType DestPropertyExpression::eval() const {
+folly::Future<OptVariantType> DestPropertyExpression::eval() const {
     return context_->getters().getDstTagProp(*alias_, *prop_);
 }
 
@@ -235,7 +235,7 @@ const char* DestPropertyExpression::decode(const char *pos, const char *end) {
 }
 
 
-OptVariantType VariablePropertyExpression::eval() const {
+folly::Future<OptVariantType> VariablePropertyExpression::eval() const {
     return context_->getters().getVariableProp(*prop_);
 }
 
@@ -278,7 +278,7 @@ const char* VariablePropertyExpression::decode(const char *pos, const char *end)
 }
 
 
-OptVariantType EdgeTypeExpression::eval() const {
+folly::Future<OptVariantType> EdgeTypeExpression::eval() const {
     return *alias_;
 }
 
@@ -306,7 +306,7 @@ const char* EdgeTypeExpression::decode(const char *pos, const char *end) {
     return pos;
 }
 
-OptVariantType EdgeSrcIdExpression::eval() const {
+folly::Future<OptVariantType> EdgeSrcIdExpression::eval() const {
     return context_->getters().getAliasProp(*alias_, *prop_);
 }
 
@@ -334,7 +334,7 @@ const char* EdgeSrcIdExpression::decode(const char *pos, const char *end) {
     return pos;
 }
 
-OptVariantType EdgeDstIdExpression::eval() const {
+folly::Future<OptVariantType> EdgeDstIdExpression::eval() const {
     return context_->getters().getAliasProp(*alias_, *prop_);
 }
 
@@ -362,7 +362,7 @@ const char* EdgeDstIdExpression::decode(const char *pos, const char *end) {
     return pos;
 }
 
-OptVariantType EdgeRankExpression::eval() const {
+folly::Future<OptVariantType> EdgeRankExpression::eval() const {
     return context_->getters().getAliasProp(*alias_, *prop_);
 }
 
@@ -391,7 +391,7 @@ const char* EdgeRankExpression::decode(const char *pos, const char *end) {
 }
 
 
-OptVariantType SourcePropertyExpression::eval() const {
+folly::Future<OptVariantType> SourcePropertyExpression::eval() const {
     return context_->getters().getSrcTagProp(*alias_, *prop_);
 }
 
@@ -452,7 +452,7 @@ std::string PrimaryExpression::toString() const {
     return buf;
 }
 
-OptVariantType PrimaryExpression::eval() const {
+folly::Future<OptVariantType> PrimaryExpression::eval() const {
     switch (operand_.which()) {
         case VAR_INT64:
             return boost::get<int64_t>(operand_);
@@ -551,11 +551,11 @@ std::string FunctionCallExpression::toString() const {
     return buf;
 }
 
-OptVariantType FunctionCallExpression::eval() const {
+folly::Future<OptVariantType> FunctionCallExpression::eval() const {
     std::vector<VariantType> args;
 
     for (auto it = args_.cbegin(); it != args_.cend(); ++it) {
-        auto result = (*it)->eval();
+        auto result = (*it)->eval().get();
         if (!result.ok()) {
             return result;
         }
@@ -625,7 +625,7 @@ std::string UUIDExpression::toString() const {
     return folly::stringPrintf("uuid(%s)", field_->c_str());
 }
 
-OptVariantType UUIDExpression::eval() const {
+folly::Future<OptVariantType> UUIDExpression::eval() const {
      auto client = context_->storageClient();
      auto space = context_->space();
      auto uuidResult = client->getUUID(space, *field_).get();
@@ -660,24 +660,44 @@ std::string UnaryExpression::toString() const {
     return buf;
 }
 
-OptVariantType UnaryExpression::eval() const {
+folly::Future<OptVariantType> UnaryExpression::eval() const {
     auto value = operand_->eval();
-    if (value.ok()) {
+
+    folly::Promise<OptVariantType> p;
+    auto f = p.getFuture();
+
+    auto cb = [this] (auto &&resp) {
+        if (!resp.ok()) {
+            return OptVariantType(Status::Error("error"));
+        }
+        auto ret = std::move(resp).value();
+
         if (op_ == PLUS) {
-            return value;
+            return OptVariantType(ret);
         } else if (op_ == NEGATE) {
-            if (isInt(value.value())) {
-                return OptVariantType(-asInt(value.value()));
-            } else if (isDouble(value.value())) {
-                return OptVariantType(-asDouble(value.value()));
+            if (isInt(ret)) {
+                return OptVariantType(-asInt(ret));
+            } else if (isDouble(ret)) {
+                return OptVariantType(-asDouble(ret));
             }
         } else {
-            return OptVariantType(!asBool(value.value()));
+            return OptVariantType(!asBool(ret));
         }
-    }
+        return OptVariantType(Status::Error("error"));
+    };
 
-    return OptVariantType(Status::Error(folly::sformat(
-        "attempt to perform unary arithmetic on a {}", value.value().type().name())));
+    f.via(context_->executor()).thenValue(cb);
+
+    /*
+    auto error = [p = std::move(promise), value] (auto &&e) {
+        LOG(ERROR) << "UnaryExpression Exception caught: " << e.what();
+        //p.setValue(OptVariantType(Status::Error(folly::sformat(
+        //    "attempt to perform unary arithmetic on a {}", value.value().type().name()))));
+        p.setValue(OptVariantType(Status::OK()));
+    };
+    */
+
+    return f;
 }
 
 Status UnaryExpression::prepare() {
@@ -735,8 +755,8 @@ std::string TypeCastingExpression::toString() const {
 }
 
 
-OptVariantType TypeCastingExpression::eval() const {
-    auto result = operand_->eval();
+folly::Future<OptVariantType> TypeCastingExpression::eval() const {
+    auto result = operand_->eval().get();
     if (!result.ok()) {
         return result;
     }
@@ -797,9 +817,9 @@ std::string ArithmeticExpression::toString() const {
     return buf;
 }
 
-OptVariantType ArithmeticExpression::eval() const {
-    auto left = left_->eval();
-    auto right = right_->eval();
+folly::Future<OptVariantType> ArithmeticExpression::eval() const {
+    auto left = left_->eval().get();
+    auto right = right_->eval().get();
     if (!left.ok()) {
         return left;
     }
@@ -938,9 +958,9 @@ std::string RelationalExpression::toString() const {
     return buf;
 }
 
-OptVariantType RelationalExpression::eval() const {
-    auto left = left_->eval();
-    auto right = right_->eval();
+folly::Future<OptVariantType> RelationalExpression::eval() const {
+    auto left = left_->eval().get();
+    auto right = right_->eval().get();
 
     if (!left.ok()) {
         return left;
@@ -1065,9 +1085,9 @@ std::string LogicalExpression::toString() const {
     return buf;
 }
 
-OptVariantType LogicalExpression::eval() const {
-    auto left = left_->eval();
-    auto right = right_->eval();
+folly::Future<OptVariantType> LogicalExpression::eval() const {
+    auto left = left_->eval().get();
+    auto right = right_->eval().get();
 
     if (!left.ok()) {
         return left;

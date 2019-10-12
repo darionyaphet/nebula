@@ -19,7 +19,7 @@ void UpdateVertexProcessor::onProcessFinished(int32_t retNum) {
         respScheam.columns.reserve(retNum);
         RowWriter writer(nullptr);
         for (auto& exp : returnColumnsExp_) {
-            auto value = exp->eval();
+            auto value = exp->eval().get();
             if (!value.ok()) {
                 LOG(ERROR) << value.status();
                 return;
@@ -163,7 +163,7 @@ bool UpdateVertexProcessor::checkFilter(const PartitionID partId, const VertexID
     };
 
     if (this->exp_ != nullptr) {
-        auto filterResult = this->exp_->eval();
+        auto filterResult = this->exp_->eval().get();
         if (!filterResult.ok() || !Expression::asBool(filterResult.value())) {
             VLOG(1) << "Filter skips the update";
             return false;
@@ -189,7 +189,7 @@ std::string UpdateVertexProcessor::updateAndWriteBack() {
         }
         auto vexp = std::move(exp).value();
         vexp->setContext(this->expCtx_.get());
-        auto value = vexp->eval();
+        auto value = vexp->eval().get();
         if (!value.ok()) {
             return std::string("");
         }

@@ -101,7 +101,7 @@ void ConfigExecutor::setVariables() {
             name = *configItem_->getName();
         }
         if (configItem_->getValue() != nullptr) {
-            auto v = configItem_->getValue()->eval();
+            auto v = configItem_->getValue()->eval().get();
             if (!v.ok()) {
                 DCHECK(onError_);
                 onError_(v.status());

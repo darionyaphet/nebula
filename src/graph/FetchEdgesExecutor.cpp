@@ -217,12 +217,12 @@ Status FetchEdgesExecutor::setupEdgeKeysFromExpr() {
         if (!status.ok()) {
             break;
         }
-        auto value = srcExpr->eval();
+        auto value = srcExpr->eval().get();
         if (!value.ok()) {
             return value.status();
         }
         auto srcid = value.value();
-        value = dstExpr->eval();
+        value = dstExpr->eval().get();
         if (!value.ok()) {
             return value.status();
         }
@@ -344,7 +344,7 @@ void FetchEdgesExecutor::processResult(RpcResponse &&result) {
             };
             for (auto *column : yields_) {
                 auto *expr = column->expr();
-                auto value = expr->eval();
+                auto value = expr->eval().get();
                 if (!value.ok()) {
                     onError_(value.status());
                     return;

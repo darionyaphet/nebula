@@ -168,7 +168,7 @@ Status GoExecutor::prepareFrom() {
             if (!status.ok()) {
                 break;
             }
-            auto value = expr->eval();
+            auto value = expr->eval().get();
             if (!value.ok()) {
                 status = Status::Error();
                 break;
@@ -912,7 +912,7 @@ bool GoExecutor::processFinalResult(RpcResponse &rpcResp, Callback cb) const {
 
                     // Evaluate filter
                     if (filter_ != nullptr) {
-                        auto value = filter_->eval();
+                        auto value = filter_->eval().get();
                         if (!value.ok()) {
                             onError_(value.status());
                             return false;
@@ -928,7 +928,7 @@ bool GoExecutor::processFinalResult(RpcResponse &rpcResp, Callback cb) const {
                     for (auto *column : yields_) {
                         colTypes.emplace_back(SupportedType::UNKNOWN);
                         auto *expr = column->expr();
-                        auto value = expr->eval();
+                        auto value = expr->eval().get();
                         if (!value.ok()) {
                             onError_(value.status());
                             return false;

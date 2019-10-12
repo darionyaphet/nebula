@@ -23,7 +23,7 @@ Status DeleteVertexExecutor::prepare() {
 
     auto vid = sentence_->vid();
     vid->setContext(expCtx_.get());
-    auto ovalue = vid->eval();
+    auto ovalue = vid->eval().get();
     auto v = ovalue.value();
     if (!Expression::isInt(v)) {
         return Status::Error("Vertex ID should be of type integer");

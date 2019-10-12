@@ -12,6 +12,7 @@
 #include "storage/client/StorageClient.h"
 #include <boost/variant.hpp>
 #include <folly/futures/Future.h>
+#include <folly/futures/Promise.h>
 
 namespace nebula {
 
@@ -119,6 +120,13 @@ public:
         return storageClient_;
     }
 
+    void setExecutor(folly::Executor *executor) {
+        executor_ = executor;
+    }
+
+    folly::Executor* executor() {
+        return executor_;
+    }
 
     void setSpace(GraphSpaceID space) {
         space_ = space;
@@ -160,6 +168,7 @@ private:
     bool                                      overAll_{false};
     GraphSpaceID                              space_;
     nebula::storage::StorageClient            *storageClient_{nullptr};
+    folly::Executor                           *executor_{nullptr};
 };
 
 
@@ -175,7 +184,7 @@ public:
 
     virtual Status MUST_USE_RESULT prepare() = 0;
 
-    virtual OptVariantType eval() const = 0;
+    virtual folly::Future<OptVariantType> eval() const = 0;
 
     virtual bool isInputExpression() const {
         return kind_ == kInputProp;
@@ -406,7 +415,7 @@ public:
 
     std::string toString() const override;
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -442,7 +451,7 @@ public:
         prop_.reset(prop);
     }
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -467,7 +476,7 @@ public:
         prop_.reset(prop);
     }
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -492,7 +501,7 @@ public:
         prop_.reset(prop);
     }
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -517,7 +526,7 @@ public:
         prop_.reset(new std::string("_type"));
     }
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -542,7 +551,7 @@ public:
         prop_.reset(new std::string("_src"));
     }
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -567,7 +576,7 @@ public:
         prop_.reset(new std::string("_dst"));
     }
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -592,7 +601,7 @@ public:
         prop_.reset(new std::string("_rank"));
     }
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -617,7 +626,7 @@ public:
         prop_.reset(prop);
     }
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -657,7 +666,7 @@ public:
 
     std::string toString() const override;
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -703,7 +712,7 @@ public:
 
     std::string toString() const override;
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -739,7 +748,7 @@ public:
 
     std::string toString() const override;
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -780,7 +789,7 @@ public:
 
     std::string toString() const override;
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -819,7 +828,7 @@ public:
 
     std::string toString() const override;
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -870,7 +879,7 @@ public:
 
     std::string toString() const override;
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -921,7 +930,7 @@ public:
 
     std::string toString() const override;
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
@@ -974,7 +983,7 @@ public:
 
     std::string toString() const override;
 
-    OptVariantType eval() const override;
+    folly::Future<OptVariantType> eval() const override;
 
     Status MUST_USE_RESULT prepare() override;
 
