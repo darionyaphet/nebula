@@ -1307,39 +1307,65 @@ TEST(Parser, Distinct) {
 TEST(Parser, ConfigOperation) {
     {
         GQLParser parser;
-        std::string query = "SHOW VARIABLES";
+        std::string query = "SHOW CONFIGS";
         auto result = parser.parse(query);
         ASSERT_TRUE(result.ok()) << result.status();
     }
     {
         GQLParser parser;
-        std::string query = "SHOW VARIABLES GRAPH";
+        std::string query = "SHOW CONFIGS GRAPH";
         auto result = parser.parse(query);
         ASSERT_TRUE(result.ok()) << result.status();
     }
     {
         GQLParser parser;
-        std::string query = "UPDATE VARIABLES storage:name=value";
+        std::string query = "UPDATE CONFIGS storage:name=value";
         auto result = parser.parse(query);
         ASSERT_TRUE(result.ok()) << result.status();
     }
     {
         GQLParser parser;
-        std::string query = "GET VARIABLES Meta:name";
+        std::string query = "GET CONFIGS Meta:name";
         auto result = parser.parse(query);
         ASSERT_TRUE(result.ok()) << result.status();
     }
     {
         GQLParser parser;
-        std::string query = "UPDATE VARIABLES load_data_interval_secs=120";
+        std::string query = "UPDATE CONFIGS load_data_interval_secs=120";
         auto result = parser.parse(query);
         ASSERT_TRUE(result.ok()) << result.status();
     }
     {
         GQLParser parser;
-        std::string query = "GET VARIABLES load_data_interval_secs";
+        std::string query = "GET CONFIGS load_data_interval_secs";
         auto result = parser.parse(query);
         ASSERT_TRUE(result.ok()) << result.status();
+    }
+    {
+        GQLParser parser;
+        std::string query = "UPDATE CONFIGS storage:rocksdb_db_options = "
+                            "{ stats_dump_period_sec = 200 }";
+        auto result = parser.parse(query);
+        ASSERT_TRUE(result.ok()) << result.status();
+    }
+    {
+        GQLParser parser;
+        std::string query = "UPDATE CONFIGS rocksdb_db_options={disable_auto_compaction=false}";
+        auto result = parser.parse(query);
+        ASSERT_TRUE(result.ok()) << result.status();
+    }
+    {
+        GQLParser parser;
+        std::string query = "UPDATE CONFIGS storage:rocksdb_db_options = "
+                            "{stats_dump_period_sec = 200, disable_auto_compaction = false}";
+        auto result = parser.parse(query);
+        ASSERT_TRUE(result.ok()) << result.status();
+    }
+    {
+        GQLParser parser;
+        std::string query = "UPDATE CONFIGS storage:rocksdb_db_options = {}";
+        auto result = parser.parse(query);
+        ASSERT_FALSE(result.ok());
     }
 }
 
@@ -1368,4 +1394,40 @@ TEST(Parser, CrashByFuzzer) {
     }
 }
 
+TEST(Parser, FindPath) {
+    {
+        GQLParser parser;
+        std::string query = "FIND SHORTEST PATH FROM 1 TO 2 OVER like";
+        auto result = parser.parse(query);
+        ASSERT_TRUE(result.ok()) << result.status();
+    }
+}
+
+TEST(Parser, Limit) {
+    {
+        GQLParser parser;
+        std::string query = "GO FROM 1 OVER work | LIMIT 1";
+        auto result = parser.parse(query);
+        ASSERT_TRUE(result.ok()) << result.status();
+    }
+    {
+        GQLParser parser;
+        std::string query = "GO FROM 1 OVER work | LIMIT 1,2";
+        auto result = parser.parse(query);
+        ASSERT_TRUE(result.ok()) << result.status();
+    }
+    {
+        GQLParser parser;
+        std::string query = "GO FROM 1 OVER work | LIMIT 1 OFFSET 2";
+        auto result = parser.parse(query);
+        ASSERT_TRUE(result.ok()) << result.status();
+    }
+    // ERROR
+    {
+        GQLParser parser;
+        std::string query = "GO FROM 1 OVER work | LIMIT \"1\"";
+        auto result = parser.parse(query);
+        ASSERT_FALSE(result.ok());
+    }
+}
 }   // namespace nebula

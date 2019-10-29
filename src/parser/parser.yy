@@ -42,7 +42,9 @@ class GraphScanner;
     nebula::ColumnNameList                 *colsnamelist;
     nebula::ColumnType                      type;
     nebula::StepClause                     *step_clause;
+    nebula::StepClause                     *find_path_upto_clause;
     nebula::FromClause                     *from_clause;
+    nebula::ToClause                       *to_clause;
     nebula::VertexIDList                   *vid_list;
     nebula::OverEdge                       *over_edge;
     nebula::OverEdges                      *over_edges;
@@ -102,12 +104,13 @@ class GraphScanner;
 %token KW_IF KW_NOT KW_EXISTS KW_WITH KW_FIRSTNAME KW_LASTNAME KW_EMAIL KW_PHONE KW_USER KW_USERS
 %token KW_PASSWORD KW_CHANGE KW_ROLE KW_GOD KW_ADMIN KW_GUEST KW_GRANT KW_REVOKE KW_ON
 %token KW_ROLES KW_BY KW_DOWNLOAD KW_HDFS
-%token KW_VARIABLES KW_GET KW_DECLARE KW_GRAPH KW_META KW_STORAGE
+%token KW_CONFIGS KW_GET KW_DECLARE KW_GRAPH KW_META KW_STORAGE
 %token KW_TTL_DURATION KW_TTL_COL
-%token KW_ORDER KW_ASC
+%token KW_ORDER KW_ASC KW_LIMIT KW_OFFSET
 %token KW_FETCH KW_PROP KW_UPDATE KW_UPSERT KW_WHEN
 %token KW_DISTINCT KW_ALL KW_OF
 %token KW_BALANCE KW_LEADER KW_DATA
+%token KW_SHORTEST KW_PATH
 
 /* symbols */
 %token L_PAREN R_PAREN L_BRACKET R_BRACKET L_BRACE R_BRACE COMMA
@@ -175,6 +178,8 @@ class GraphScanner;
 %type <edge_key> edge_key
 %type <edge_keys> edge_keys
 %type <edge_key_ref> edge_key_ref
+%type <to_clause> to_clause
+%type <find_path_upto_clause> find_path_upto_clause
 
 %type <intval> port unary_integer rank
 
@@ -187,8 +192,8 @@ class GraphScanner;
 %type <role_type_clause> role_type_clause
 %type <acl_item_clause> acl_item_clause
 
-%type <sentence> go_sentence match_sentence use_sentence find_sentence
-%type <sentence> order_by_sentence
+%type <sentence> go_sentence match_sentence use_sentence find_sentence find_path_sentence
+%type <sentence> order_by_sentence limit_sentence
 %type <sentence> fetch_vertices_sentence fetch_edges_sentence
 %type <sentence> create_tag_sentence create_edge_sentence
 %type <sentence> alter_tag_sentence alter_edge_sentence
@@ -716,9 +721,9 @@ edge_key
     : vid R_ARROW vid AT rank {
         $$ = new EdgeKey($1, $3, $5);
     }
-	| vid R_ARROW vid {
+    | vid R_ARROW vid {
         $$ = new EdgeKey($1, $3, 0);
-	}
+    }
     ;
 
 edge_keys
@@ -765,6 +770,49 @@ fetch_edges_sentence
 fetch_sentence
     : fetch_vertices_sentence { $$ = $1; }
     | fetch_edges_sentence { $$ = $1; }
+    ;
+
+find_path_sentence
+    : KW_FIND KW_ALL KW_PATH from_clause to_clause over_clause find_path_upto_clause
+    /* where_clause */ {
+        auto *s = new FindPathSentence(false);
+        s->setFrom($4);
+        s->setTo($5);
+        s->setOver($6);
+        s->setStep($7);
+        /* s->setWhere($8); */
+        $$ = s;
+    }
+    | KW_FIND KW_SHORTEST KW_PATH from_clause to_clause over_clause find_path_upto_clause
+    /* where_clause */ {
+        auto *s = new FindPathSentence(true);
+        s->setFrom($4);
+        s->setTo($5);
+        s->setOver($6);
+        s->setStep($7);
+        /* s->setWhere($8); */
+        $$ = s;
+    }
+    ;
+
+find_path_upto_clause
+    : %empty { $$ = new StepClause(5, true); }
+    | KW_UPTO INTEGER KW_STEPS { $$ = new StepClause($2, true); }
+    ;
+
+to_clause
+    : KW_TO vid_list {
+        $$ = new ToClause($2);
+    }
+    | KW_TO vid_ref_expression {
+        $$ = new ToClause($2);
+    }
+    ;
+
+limit_sentence
+    : KW_LIMIT INTEGER { $$ = new LimitSentence(0, $2); }
+    | KW_LIMIT INTEGER COMMA INTEGER { $$ = new LimitSentence($2, $4); }
+    | KW_LIMIT INTEGER KW_OFFSET INTEGER { $$ = new LimitSentence($2, $4); }
     ;
 
 use_sentence
@@ -976,13 +1024,15 @@ drop_edge_sentence
     ;
 
 traverse_sentence
-    : go_sentence { $$ = $1; }
+    : L_PAREN piped_sentence R_PAREN { $$ = $2; }
+    | L_PAREN set_sentence R_PAREN { $$ = $2; }
+    | go_sentence { $$ = $1; }
     | match_sentence { $$ = $1; }
     | find_sentence { $$ = $1; }
     | order_by_sentence { $$ = $1; }
     | fetch_sentence { $$ = $1; }
-    | L_PAREN piped_sentence R_PAREN { $$ = $2; }
-    | L_PAREN set_sentence R_PAREN { $$ = $2; }
+    | find_path_sentence { $$ = $1; }
+    | limit_sentence { $$ = $1; }
     ;
 
 set_sentence
@@ -1318,7 +1368,7 @@ show_sentence
     | KW_SHOW KW_ROLES KW_IN name_label {
         $$ = new ShowSentence(ShowSentence::ShowType::kShowRoles, $4);
     }
-    | KW_SHOW KW_VARIABLES show_config_item {
+    | KW_SHOW KW_CONFIGS show_config_item {
         $$ = new ConfigSentence(ConfigSentence::SubType::kShow, $3);
     }
     | KW_SHOW KW_CREATE KW_SPACE name_label {
@@ -1394,6 +1444,12 @@ set_config_item
     }
     | name_label ASSIGN expression {
         $$ = new ConfigRowItem(ConfigModule::ALL, $1, $3);
+    }
+    | config_module_enum COLON name_label ASSIGN L_BRACE update_list R_BRACE {
+        $$ = new ConfigRowItem($1, $3, $6);
+    }
+    | name_label ASSIGN L_BRACE update_list R_BRACE {
+        $$ = new ConfigRowItem(ConfigModule::ALL, $1, $4);
     }
     ;
 
@@ -1574,13 +1630,13 @@ revoke_sentence
     ;
 
 get_config_sentence
-    : KW_GET KW_VARIABLES get_config_item {
+    : KW_GET KW_CONFIGS get_config_item {
         $$ = new ConfigSentence(ConfigSentence::SubType::kGet, $3);
     }
     ;
 
 set_config_sentence
-    : KW_UPDATE KW_VARIABLES set_config_item  {
+    : KW_UPDATE KW_CONFIGS set_config_item  {
         $$ = new ConfigSentence(ConfigSentence::SubType::kSet, $3);
     }
     ;

@@ -146,7 +146,7 @@ TEST(BalanceIntegrationTest, BalanceTest) {
         for (int32_t vId = 0; vId < 10000; vId++) {
             vIds.emplace_back(vId);
         }
-        retCols.emplace_back(storage::TestUtils::vetexPropDef("c", tagId));
+        retCols.emplace_back(storage::TestUtils::vertexPropDef("c", tagId));
         auto f = sClient->getVertexProps(spaceId, std::move(vIds), std::move(retCols));
         auto resp = std::move(f).get();
         if (!resp.succeeded()) {
@@ -160,7 +160,7 @@ TEST(BalanceIntegrationTest, BalanceTest) {
         }
         ASSERT_TRUE(resp.succeeded());
         auto& results = resp.responses();
-        ASSERT_EQ(partition, results.size());
+        EXPECT_EQ(partition, results.size());
         EXPECT_EQ(0, results[0].result.failed_codes.size());
         EXPECT_EQ(1, results[0].vertex_schema[tagId].columns.size());
         auto tagProvider = std::make_shared<ResultSchemaProvider>(results[0].vertex_schema[tagId]);
