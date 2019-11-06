@@ -756,25 +756,34 @@ std::string TypeCastingExpression::toString() const {
 
 
 folly::Future<OptVariantType> TypeCastingExpression::eval() const {
-    auto result = operand_->eval().get();
-    if (!result.ok()) {
-        return result;
-    }
+    return operand_->eval().thenValue([this](const auto &result) {
+        if (!result.ok()) {
+            return result;
+        }
 
-    switch (type_) {
-        case ColumnType::INT:
-        case ColumnType::TIMESTAMP:
-            return Expression::toInt(result.value());
-        case ColumnType::STRING:
-            return Expression::toString(result.value());
-        case ColumnType::DOUBLE:
-            return Expression::toDouble(result.value());
-        case ColumnType::BOOL:
-            return Expression::toBool(result.value());
-        case ColumnType::BIGINT:
-            return Status::Error("Type bigint not supported yet");
-    }
-    LOG(FATAL) << "casting to unknown type: " << static_cast<int>(type_);
+        OptVariantType t;
+        switch (type_) {
+            case ColumnType::INT:
+            case ColumnType::TIMESTAMP:
+                t = Expression::toInt(result.value());
+                return t;
+            case ColumnType::STRING:
+               t = Expression::toString(result.value());
+               return t;
+            case ColumnType::DOUBLE:
+               t = Expression::toDouble(result.value());
+               return t;
+            case ColumnType::BOOL:
+               t = Expression::toBool(result.value());
+               return t;
+            case ColumnType::BIGINT:
+               t = Status::Error("Type bigint not supported yet");
+               return t;
+            default:
+               t = Status::Error("Type bigint not supported yet");
+               return t;
+        }
+    });
 }
 
 
