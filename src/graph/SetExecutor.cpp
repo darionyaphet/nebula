@@ -47,8 +47,8 @@ Status SetExecutor::prepare() {
     if (sentence_->op() != SetSentence::Operator::UNION &&
             sentence_->op() != SetSentence::Operator::INTERSECT &&
             sentence_->op() != SetSentence::Operator::MINUS) {
-        LOG(ERROR) << "Unknown operator: " << sentence_->op();
-        return Status::Error("Unknown operator: %d", sentence_->op());
+        LOG(ERROR) << "Unknown operator";
+        return Status::Error("Unknown operator");
     }
     return Status::OK();
 }
@@ -161,6 +161,8 @@ void SetExecutor::execute() {
             case SetSentence::Operator::MINUS:
                 doMinus();
                 break;
+            default:
+                LOG(FATAL) << "Unknown operator: " << static_cast<int8_t>(sentence_->op());
         }
     };
     folly::collectAll(futures_).via(runner).thenValue(cb);

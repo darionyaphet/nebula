@@ -206,31 +206,31 @@ public:
     virtual OptVariantType eval(Getters &getters) const = 0;
 
     virtual bool isInputExpression() const {
-        return kind_ == kInputProp;
+        return kind_ == Kind::kInputProp;
     }
 
     virtual bool isVariableExpression() const {
-        return kind_ == kVariableProp;
+        return kind_ == Kind::kVariableProp;
     }
 
     virtual bool isAliasExpression() const {
-        return kind_ == kAliasProp;
+        return kind_ == Kind::kAliasProp;
     }
 
     virtual bool isTypeCastingExpression() const {
-        return kind_ == kTypeCasting;
+        return kind_ == Kind::kTypeCasting;
     }
 
     virtual bool isFunCallExpression() const {
-        return kind_ == kFunctionCall;
+        return kind_ == Kind::kFunctionCall;
     }
 
     virtual bool isLogicalExpression() const {
-        return kind_ == kLogical;
+        return kind_ == Kind::kLogical;
     }
 
     bool isEdgeDstIdExpression() const {
-        return kind_ == kEdgeDstId;
+        return kind_ == Kind::kEdgeDstId;
     }
 
     /**
@@ -355,7 +355,7 @@ public:
 
     static void print(const VariantType &value);
 
-    enum Kind : uint8_t {
+    enum class Kind : uint8_t {
         kUnknown = 0,
 
         kPrimary,
@@ -425,20 +425,20 @@ private:
 
 protected:
     ExpressionContext                          *context_{nullptr};
-    Kind                                        kind_{kUnknown};
+    Kind                                        kind_{Kind::kUnknown};
 };
 
 // Alias.any_prop_name, i.e. EdgeName.any_prop_name
 class AliasPropertyExpression: public Expression {
 public:
     AliasPropertyExpression() {
-        kind_ = kAliasProp;
+        kind_ = Kind::kAliasProp;
     }
 
     AliasPropertyExpression(std::string *ref,
                             std::string *alias,
                             std::string *prop) {
-        kind_ = kAliasProp;
+        kind_ = Kind::kAliasProp;
         ref_.reset(ref);
         alias_.reset(alias);
         prop_.reset(prop);
@@ -472,7 +472,7 @@ protected:
 class InputPropertyExpression final : public AliasPropertyExpression {
 public:
     InputPropertyExpression() {
-        kind_ = kInputProp;
+        kind_ = Kind::kInputProp;
     }
 
     explicit InputPropertyExpression(std::string *prop);
@@ -487,7 +487,7 @@ public:
 class DestPropertyExpression final : public AliasPropertyExpression {
 public:
     DestPropertyExpression() {
-        kind_ = kDestProp;
+        kind_ = Kind::kDestProp;
     }
 
     DestPropertyExpression(std::string *tag, std::string *prop);
@@ -502,7 +502,7 @@ public:
 class VariablePropertyExpression final : public AliasPropertyExpression {
 public:
     VariablePropertyExpression() {
-        kind_ = kVariableProp;
+        kind_ = Kind::kVariableProp;
     }
 
     VariablePropertyExpression(std::string *var, std::string *prop);
@@ -517,11 +517,11 @@ public:
 class EdgeTypeExpression final : public AliasPropertyExpression {
 public:
     EdgeTypeExpression() {
-        kind_ = kEdgeType;
+        kind_ = Kind::kEdgeType;
     }
 
     explicit EdgeTypeExpression(std::string *alias) {
-        kind_ = kEdgeType;
+        kind_ = Kind::kEdgeType;
         ref_.reset(new std::string(""));
         alias_.reset(alias);
         prop_.reset(new std::string(_TYPE));
@@ -537,11 +537,11 @@ public:
 class EdgeSrcIdExpression final : public AliasPropertyExpression {
 public:
     EdgeSrcIdExpression() {
-        kind_ = kEdgeSrcId;
+        kind_ = Kind::kEdgeSrcId;
     }
 
     explicit EdgeSrcIdExpression(std::string *alias) {
-        kind_ = kEdgeSrcId;
+        kind_ = Kind::kEdgeSrcId;
         ref_.reset(new std::string(""));
         alias_.reset(alias);
         prop_.reset(new std::string(_SRC));
@@ -557,11 +557,11 @@ public:
 class EdgeDstIdExpression final : public AliasPropertyExpression {
 public:
     EdgeDstIdExpression() {
-        kind_ = kEdgeDstId;
+        kind_ = Kind::kEdgeDstId;
     }
 
     explicit EdgeDstIdExpression(std::string *alias) {
-        kind_ = kEdgeDstId;
+        kind_ = Kind::kEdgeDstId;
         ref_.reset(new std::string(""));
         alias_.reset(alias);
         prop_.reset(new std::string(_DST));
@@ -577,11 +577,11 @@ public:
 class EdgeRankExpression final : public AliasPropertyExpression {
 public:
     EdgeRankExpression() {
-        kind_ = kEdgeRank;
+        kind_ = Kind::kEdgeRank;
     }
 
     explicit EdgeRankExpression(std::string *alias) {
-        kind_ = kEdgeRank;
+        kind_ = Kind::kEdgeRank;
         ref_.reset(new std::string(""));
         alias_.reset(alias);
         prop_.reset(new std::string(_RANK));
@@ -597,7 +597,7 @@ public:
 class SourcePropertyExpression final : public AliasPropertyExpression {
 public:
     SourcePropertyExpression() {
-        kind_ = kSourceProp;
+        kind_ = Kind::kSourceProp;
     }
 
     SourcePropertyExpression(std::string *tag, std::string *prop);
@@ -612,26 +612,26 @@ public:
 class PrimaryExpression final : public Expression {
 public:
     PrimaryExpression() {
-        kind_ = kPrimary;
+        kind_ = Kind::kPrimary;
     }
 
     explicit PrimaryExpression(bool val) {
-        kind_ = kPrimary;
+        kind_ = Kind::kPrimary;
         operand_ = val;
     }
 
     explicit PrimaryExpression(int64_t val) {
-        kind_ = kPrimary;
+        kind_ = Kind::kPrimary;
         operand_ = val;
     }
 
     explicit PrimaryExpression(double val) {
-        kind_ = kPrimary;
+        kind_ = Kind::kPrimary;
         operand_ = val;
     }
 
     explicit PrimaryExpression(std::string val) {
-        kind_ = kPrimary;
+        kind_ = Kind::kPrimary;
         operand_ = std::move(val);
     }
 
@@ -669,11 +669,11 @@ private:
 class FunctionCallExpression final : public Expression {
 public:
     FunctionCallExpression() {
-        kind_ = kFunctionCall;
+        kind_ = Kind::kFunctionCall;
     }
 
     FunctionCallExpression(std::string *name, ArgumentList *args) {
-        kind_ = kFunctionCall;
+        kind_ = Kind::kFunctionCall;
         name_.reset(name);
         if (args != nullptr) {
             args_ = args->args();
@@ -724,11 +724,11 @@ private:
 class UUIDExpression final : public Expression {
 public:
     UUIDExpression() {
-        kind_ = kUUID;
+        kind_ = Kind::kUUID;
     }
 
     explicit UUIDExpression(std::string *field) {
-        kind_ = kUUID;
+        kind_ = Kind::kUUID;
         field_.reset(field);
     }
 
@@ -758,17 +758,17 @@ private:
 // +expr, -expr, !expr
 class UnaryExpression final : public Expression {
 public:
-    enum Operator : uint8_t {
+    enum class Operator : uint8_t {
         PLUS, NEGATE, NOT
     };
     static_assert(sizeof(Operator) == sizeof(uint8_t), "");
 
     UnaryExpression() {
-        kind_ = kUnary;
+        kind_ = Kind::kUnary;
     }
 
     UnaryExpression(Operator op, Expression *operand) {
-        kind_ = kUnary;
+        kind_ = Kind::kUnary;
         op_ = op;
         operand_.reset(operand);
     }
@@ -803,11 +803,11 @@ private:
 class TypeCastingExpression final : public Expression {
 public:
     TypeCastingExpression() {
-        kind_ = kTypeCasting;
+        kind_ = Kind::kTypeCasting;
     }
 
     TypeCastingExpression(ColumnType type, Expression *operand) {
-        kind_ = kTypeCasting;
+        kind_ = Kind::kTypeCasting;
         type_ = type;
         operand_.reset(operand);
     }
@@ -847,17 +847,17 @@ private:
 // +, -, *, /, %
 class ArithmeticExpression final : public Expression {
 public:
-    enum Operator : uint8_t {
+    enum class Operator : uint8_t {
         ADD, SUB, MUL, DIV, MOD, XOR
     };
     static_assert(sizeof(Operator) == sizeof(uint8_t), "");
 
     ArithmeticExpression() {
-        kind_ = kArithmetic;
+        kind_ = Kind::kArithmetic;
     }
 
     ArithmeticExpression(Expression *left, Operator op, Expression *right) {
-        kind_ = kArithmetic;
+        kind_ = Kind::kArithmetic;
         op_ = op;
         left_.reset(left);
         right_.reset(right);
@@ -898,17 +898,17 @@ private:
 // <, <=, >, >=, ==, !=
 class RelationalExpression final : public Expression {
 public:
-    enum Operator : uint8_t {
+    enum class Operator : uint8_t {
         LT, LE, GT, GE, EQ, NE
     };
     static_assert(sizeof(Operator) == sizeof(uint8_t), "");
 
     RelationalExpression() {
-        kind_ = kRelational;
+        kind_ = Kind::kRelational;
     }
 
     RelationalExpression(Expression *left, Operator op, Expression *right) {
-        kind_ = kRelational;
+        kind_ = Kind::kRelational;
         op_ = op;
         left_.reset(left);
         right_.reset(right);
@@ -955,17 +955,17 @@ private:
 // &&, ||
 class LogicalExpression final : public Expression {
 public:
-    enum Operator : uint8_t {
+    enum class Operator : uint8_t {
         AND, OR, XOR
     };
     static_assert(sizeof(Operator) == sizeof(uint8_t), "");
 
     LogicalExpression() {
-        kind_ = kLogical;
+        kind_ = Kind::kLogical;
     }
 
     LogicalExpression(Expression *left, Operator op, Expression *right) {
-        kind_ = kLogical;
+        kind_ = Kind::kLogical;
         op_ = op;
         left_.reset(left);
         right_.reset(right);

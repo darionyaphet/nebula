@@ -74,11 +74,11 @@ public:
 
 #define STATUS_GENERATOR(ERROR)                         \
     static Status ERROR() {                             \
-        return Status(k##ERROR, "");                    \
+        return Status(Code::k##ERROR, "");              \
     }                                                   \
                                                         \
     static Status ERROR(folly::StringPiece msg) {       \
-        return Status(k##ERROR, msg);                   \
+        return Status(Code::k##ERROR, msg);             \
     }                                                   \
                                                         \
     static Status ERROR(const char *fmt, ...)           \
@@ -87,11 +87,11 @@ public:
         va_start(args, fmt);                            \
         auto msg = format(fmt, args);                   \
         va_end(args);                                   \
-        return Status(k##ERROR, msg);                   \
+        return Status(Code::k##ERROR, msg);             \
     }                                                   \
                                                         \
     bool is##ERROR() const {                            \
-        return code() == k##ERROR;                      \
+        return code() == Code::k##ERROR;                \
     }
     // Some succeeded codes
     STATUS_GENERATOR(Inserted);
@@ -133,7 +133,7 @@ public:
     // If some kind of error really needs to be distinguished with others using a specific
     // code, other than a general code and specific msg, you could add a new code below,
     // e.g. kSomeError, and add the cooresponding STATUS_GENERATOR(SomeError)
-    enum Code : uint16_t {
+    enum class Code : uint16_t {
         // OK
         kOk                     = 0,
         kInserted               = 1,
@@ -162,7 +162,7 @@ public:
 
     Code code() const {
         if (state_ == nullptr) {
-            return kOk;
+            return Code::kOk;
         }
         return reinterpret_cast<const Header*>(state_.get())->code_;
     }

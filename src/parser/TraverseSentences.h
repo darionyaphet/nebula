@@ -137,9 +137,10 @@ private:
 
 class SetSentence final : public Sentence {
 public:
-    enum Operator {
+    enum class Operator {
         UNION, INTERSECT, MINUS
     };
+
 
     SetSentence(Sentence *left, Operator op, Sentence *right) {
         kind_ = Kind::kSet;
@@ -227,7 +228,7 @@ private:
 
 class OrderFactor final {
 public:
-    enum OrderType : uint8_t {
+    enum class OrderType : uint8_t {
         ASCEND,
         DESCEND
     };

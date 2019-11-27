@@ -332,7 +332,7 @@ TEST(IndexTest, UpdateVertexTest) {
                                                RelationalExpression::Operator::EQ,
                                                priExp2);
         // left AND right is ture
-        auto logExp = std::make_unique<LogicalExpression>(left, LogicalExpression::AND, right);
+        auto logExp = std::make_unique<LogicalExpression>(left, LogicalExpression::Operator::AND, right);
         req.set_filter(Expression::encode(logExp.get()));
         LOG(INFO) << "Build update items...";
         std::vector<cpp2::UpdateItem> items;

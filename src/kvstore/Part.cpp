@@ -59,7 +59,7 @@ std::pair<LogID, TermID> Part::lastCommittedLogId() {
 
 
 void Part::asyncPut(folly::StringPiece key, folly::StringPiece value, KVCallback cb) {
-    std::string log = encodeMultiValues(OP_PUT, key, value);
+    std::string log = encodeMultiValues(LogType::OP_PUT, key, value);
 
     appendAsync(FLAGS_cluster_id, std::move(log))
         .thenValue([this, callback = std::move(cb)] (AppendLogResult res) mutable {
@@ -69,7 +69,7 @@ void Part::asyncPut(folly::StringPiece key, folly::StringPiece value, KVCallback
 
 
 void Part::asyncMultiPut(const std::vector<KV>& keyValues, KVCallback cb) {
-    std::string log = encodeMultiValues(OP_MULTI_PUT, keyValues);
+    std::string log = encodeMultiValues(LogType::OP_MULTI_PUT, keyValues);
 
     appendAsync(FLAGS_cluster_id, std::move(log))
         .thenValue([this, callback = std::move(cb)] (AppendLogResult res) mutable {
@@ -79,7 +79,7 @@ void Part::asyncMultiPut(const std::vector<KV>& keyValues, KVCallback cb) {
 
 
 void Part::asyncRemove(folly::StringPiece key, KVCallback cb) {
-    std::string log = encodeSingleValue(OP_REMOVE, key);
+    std::string log = encodeSingleValue(LogType::OP_REMOVE, key);
 
     appendAsync(FLAGS_cluster_id, std::move(log))
         .thenValue([this, callback = std::move(cb)] (AppendLogResult res) mutable {
@@ -89,7 +89,7 @@ void Part::asyncRemove(folly::StringPiece key, KVCallback cb) {
 
 
 void Part::asyncMultiRemove(const std::vector<std::string>& keys, KVCallback cb) {
-    std::string log = encodeMultiValues(OP_MULTI_REMOVE, keys);
+    std::string log = encodeMultiValues(LogType::OP_MULTI_REMOVE, keys);
 
     appendAsync(FLAGS_cluster_id, std::move(log))
         .thenValue([this, callback = std::move(cb)] (AppendLogResult res) mutable {
@@ -99,7 +99,7 @@ void Part::asyncMultiRemove(const std::vector<std::string>& keys, KVCallback cb)
 
 
 void Part::asyncRemovePrefix(folly::StringPiece prefix, KVCallback cb) {
-    std::string log = encodeSingleValue(OP_REMOVE_PREFIX, prefix);
+    std::string log = encodeSingleValue(LogType::OP_REMOVE_PREFIX, prefix);
 
     appendAsync(FLAGS_cluster_id, std::move(log))
         .thenValue([this, callback = std::move(cb)] (AppendLogResult res) mutable {
@@ -111,7 +111,7 @@ void Part::asyncRemovePrefix(folly::StringPiece prefix, KVCallback cb) {
 void Part::asyncRemoveRange(folly::StringPiece start,
                             folly::StringPiece end,
                             KVCallback cb) {
-    std::string log = encodeMultiValues(OP_REMOVE_RANGE, start, end);
+    std::string log = encodeMultiValues(LogType::OP_REMOVE_RANGE, start, end);
 
     appendAsync(FLAGS_cluster_id, std::move(log))
         .thenValue([this, callback = std::move(cb)] (AppendLogResult res) mutable {
@@ -134,7 +134,7 @@ void Part::asyncAtomicOp(raftex::AtomicOp op, KVCallback cb) {
 }
 
 void Part::asyncAddLearner(const HostAddr& learner, KVCallback cb) {
-    std::string log = encodeHost(OP_ADD_LEARNER, learner);
+    std::string log = encodeHost(LogType::OP_ADD_LEARNER, learner);
     sendCommandAsync(std::move(log))
         .thenValue([callback = std::move(cb), learner, this] (AppendLogResult res) mutable {
         LOG(INFO) << idStr_ << "add learner " << learner
@@ -144,7 +144,7 @@ void Part::asyncAddLearner(const HostAddr& learner, KVCallback cb) {
 }
 
 void Part::asyncTransferLeader(const HostAddr& target, KVCallback cb) {
-    std::string log = encodeHost(OP_TRANS_LEADER, target);
+    std::string log = encodeHost(LogType::OP_TRANS_LEADER, target);
     sendCommandAsync(std::move(log))
         .thenValue([callback = std::move(cb), target, this] (AppendLogResult res) mutable {
         LOG(INFO) << idStr_ << "transfer leader to " << target
@@ -154,7 +154,7 @@ void Part::asyncTransferLeader(const HostAddr& target, KVCallback cb) {
 }
 
 void Part::asyncAddPeer(const HostAddr& peer, KVCallback cb) {
-    std::string log = encodeHost(OP_ADD_PEER, peer);
+    std::string log = encodeHost(LogType::OP_ADD_PEER, peer);
     sendCommandAsync(std::move(log))
         .thenValue([callback = std::move(cb), peer, this] (AppendLogResult res) mutable {
         LOG(INFO) << idStr_ << "add peer " << peer
@@ -164,7 +164,7 @@ void Part::asyncAddPeer(const HostAddr& peer, KVCallback cb) {
 }
 
 void Part::asyncRemovePeer(const HostAddr& peer, KVCallback cb) {
-    std::string log = encodeHost(OP_REMOVE_PEER, peer);
+    std::string log = encodeHost(LogType::OP_REMOVE_PEER, peer);
     sendCommandAsync(std::move(log))
         .thenValue([callback = std::move(cb), peer, this] (AppendLogResult res) mutable {
         LOG(INFO) << idStr_ << "remove peer " << peer
@@ -209,8 +209,8 @@ bool Part::commitLogs(std::unique_ptr<LogIterator> iter) {
         }
         DCHECK_GE(log.size(), sizeof(int64_t) + 1 + sizeof(uint32_t));
         // Skip the timestamp (type of int64_t)
-        switch (log[sizeof(int64_t)]) {
-        case OP_PUT: {
+        switch (static_cast<LogType>(log[sizeof(int64_t)])) {
+        case LogType::OP_PUT: {
             auto pieces = decodeMultiValues(log);
             DCHECK_EQ(2, pieces.size());
             if (batch->put(pieces[0], pieces[1]) != ResultCode::SUCCEEDED) {
@@ -219,7 +219,7 @@ bool Part::commitLogs(std::unique_ptr<LogIterator> iter) {
             }
             break;
         }
-        case OP_MULTI_PUT: {
+        case LogType::OP_MULTI_PUT: {
             auto kvs = decodeMultiValues(log);
             // Make the number of values are an even number
             DCHECK_EQ((kvs.size() + 1) / 2, kvs.size() / 2);
@@ -231,7 +231,7 @@ bool Part::commitLogs(std::unique_ptr<LogIterator> iter) {
             }
             break;
         }
-        case OP_REMOVE: {
+        case LogType::OP_REMOVE: {
             auto key = decodeSingleValue(log);
             if (batch->remove(key) != ResultCode::SUCCEEDED) {
                 LOG(ERROR) << idStr_ << "Failed to call WriteBatch::remove()";
@@ -239,7 +239,7 @@ bool Part::commitLogs(std::unique_ptr<LogIterator> iter) {
             }
             break;
         }
-        case OP_MULTI_REMOVE: {
+        case LogType::OP_MULTI_REMOVE: {
             auto keys = decodeMultiValues(log);
             for (auto k : keys) {
                 if (batch->remove(k) != ResultCode::SUCCEEDED) {
@@ -249,7 +249,7 @@ bool Part::commitLogs(std::unique_ptr<LogIterator> iter) {
             }
             break;
         }
-        case OP_REMOVE_PREFIX: {
+        case LogType::OP_REMOVE_PREFIX: {
             auto prefix = decodeSingleValue(log);
             if (batch->removePrefix(prefix) != ResultCode::SUCCEEDED) {
                 LOG(ERROR) << idStr_ << "Failed to call WriteBatch::removePrefix()";
@@ -257,7 +257,7 @@ bool Part::commitLogs(std::unique_ptr<LogIterator> iter) {
             }
             break;
         }
-        case OP_REMOVE_RANGE: {
+        case LogType::OP_REMOVE_RANGE: {
             auto range = decodeMultiValues(log);
             DCHECK_EQ(2, range.size());
             if (batch->removeRange(range[0], range[1]) != ResultCode::SUCCEEDED) {
@@ -266,7 +266,7 @@ bool Part::commitLogs(std::unique_ptr<LogIterator> iter) {
             }
             break;
         }
-        case OP_BATCH_WRITE: {
+        case LogType::OP_BATCH_WRITE: {
             auto data = decodeBatchValue(log);
             for (auto& op : data) {
                 ResultCode code = ResultCode::SUCCEEDED;
@@ -287,12 +287,12 @@ bool Part::commitLogs(std::unique_ptr<LogIterator> iter) {
             }
             break;
         }
-        case OP_ADD_PEER:
-        case OP_ADD_LEARNER: {
+        case LogType::OP_ADD_PEER:
+        case LogType::OP_ADD_LEARNER: {
             break;
         }
-        case OP_TRANS_LEADER: {
-            auto newLeader = decodeHost(OP_TRANS_LEADER, log);
+        case LogType::OP_TRANS_LEADER: {
+            auto newLeader = decodeHost(LogType::OP_TRANS_LEADER, log);
             auto ts = getTimestamp(log);
             if (ts > startTimeMs_) {
                 commitTransLeader(newLeader);
@@ -301,8 +301,8 @@ bool Part::commitLogs(std::unique_ptr<LogIterator> iter) {
             }
             break;
         }
-        case OP_REMOVE_PEER: {
-            auto peer = decodeHost(OP_REMOVE_PEER, log);
+        case LogType::OP_REMOVE_PEER: {
+            auto peer = decodeHost(LogType::OP_REMOVE_PEER, log);
             auto ts = getTimestamp(log);
             if (ts > startTimeMs_) {
                 commitRemovePeer(peer);
@@ -373,9 +373,9 @@ bool Part::preProcessLog(LogID logId,
             << ", termId " << termId
             << ", clusterId " << clusterId;
     if (!log.empty()) {
-        switch (log[sizeof(int64_t)]) {
-            case OP_ADD_LEARNER: {
-                auto learner = decodeHost(OP_ADD_LEARNER, log);
+        switch (static_cast<LogType>(log[sizeof(int64_t)])) {
+            case LogType::OP_ADD_LEARNER: {
+                auto learner = decodeHost(LogType::OP_ADD_LEARNER, log);
                 auto ts = getTimestamp(log);
                 if (ts > startTimeMs_) {
                     LOG(INFO) << idStr_ << "preprocess add learner " << learner;
@@ -385,8 +385,8 @@ bool Part::preProcessLog(LogID logId,
                 }
                 break;
             }
-            case OP_TRANS_LEADER: {
-                auto newLeader = decodeHost(OP_TRANS_LEADER, log);
+            case LogType::OP_TRANS_LEADER: {
+                auto newLeader = decodeHost(LogType::OP_TRANS_LEADER, log);
                 auto ts = getTimestamp(log);
                 if (ts > startTimeMs_) {
                     LOG(INFO) << idStr_ << "preprocess trans leader " << newLeader;
@@ -396,8 +396,8 @@ bool Part::preProcessLog(LogID logId,
                 }
                 break;
             }
-            case OP_ADD_PEER: {
-                auto peer = decodeHost(OP_ADD_PEER, log);
+            case LogType::OP_ADD_PEER: {
+                auto peer = decodeHost(LogType::OP_ADD_PEER, log);
                 auto ts = getTimestamp(log);
                 if (ts > startTimeMs_) {
                     LOG(INFO) << idStr_ << "preprocess add peer " << peer;
@@ -407,8 +407,8 @@ bool Part::preProcessLog(LogID logId,
                 }
                 break;
             }
-            case OP_REMOVE_PEER: {
-                auto peer = decodeHost(OP_REMOVE_PEER, log);
+            case LogType::OP_REMOVE_PEER: {
+                auto peer = decodeHost(LogType::OP_REMOVE_PEER, log);
                 auto ts = getTimestamp(log);
                 if (ts > startTimeMs_) {
                     LOG(INFO) << idStr_ << "preprocess remove peer " << peer;

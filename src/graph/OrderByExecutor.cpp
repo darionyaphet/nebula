@@ -100,6 +100,8 @@ void OrderByExecutor::execute() {
                 return lhsColumns[fieldIndex] < rhsColumns[fieldIndex];
             } else if (orderType == OrderFactor::OrderType::DESCEND) {
                 return lhsColumns[fieldIndex] > rhsColumns[fieldIndex];
+            } else {
+                LOG(FATAL) << "Unkown Order Type: " << static_cast<int64_t>(orderType);
             }
         }
         return false;
@@ -153,8 +155,8 @@ Status OrderByExecutor::beforeExecute() {
         }
         if (factor->orderType() != OrderFactor::OrderType::ASCEND &&
                 factor->orderType() != OrderFactor::OrderType::DESCEND) {
-            LOG(ERROR) << "Unkown Order Type: " << factor->orderType();
-            return Status::Error("Unkown Order Type: %d", factor->orderType());
+            LOG(ERROR) << "Unkown Order Type";
+            return Status::Error("Unkown Order Type");
         }
         auto pair = std::make_pair(schema->getFieldIndex(field), factor->orderType());
         sortFactors_.emplace_back(std::move(pair));

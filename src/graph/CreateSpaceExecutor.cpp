@@ -27,21 +27,21 @@ Status CreateSpaceExecutor::prepare() {
     auto* charsetInfo = ectx()->getCharsetInfo();
     for (auto &item : sentence_->getOpts()) {
         switch (item->getOptType()) {
-            case SpaceOptItem::PARTITION_NUM: {
+            case SpaceOptItem::OptionType::PARTITION_NUM: {
                 spaceDesc_.partNum_ = item->get_partition_num();
                 if (spaceDesc_.partNum_ <= 0) {
                     return Status::Error("Partition_num value should be greater than zero");
                 }
                 break;
             }
-            case SpaceOptItem::REPLICA_FACTOR: {
+            case SpaceOptItem::OptionType::REPLICA_FACTOR: {
                 spaceDesc_.replicaFactor_ = item->get_replica_factor();
                 if (spaceDesc_.replicaFactor_ <= 0) {
                     return Status::Error("Replica_factor value should be greater than zero");
                 }
                 break;
             }
-            case SpaceOptItem::CHARSET: {
+            case SpaceOptItem::OptionType::CHARSET: {
                 result = item->get_charset();
                 folly::toLowerAscii(result);
                 retStatus = charsetInfo->isSupportCharset(result);
@@ -51,7 +51,7 @@ Status CreateSpaceExecutor::prepare() {
                 spaceDesc_.charsetName_ = std::move(result);
                 break;
             }
-            case SpaceOptItem::COLLATE: {
+            case SpaceOptItem::OptionType::COLLATE: {
                 result = item->get_collate();
                 folly::toLowerAscii(result);
                 retStatus = charsetInfo->isSupportCollate(result);

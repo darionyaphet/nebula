@@ -476,7 +476,9 @@ TEST(QueryBoundTest, FilterTest_TagAndEdgeFilter) {
     auto* right = new RelationalExpression(edgeExp,
                                            RelationalExpression::Operator::GE,
                                            priExp2);
-    auto logExp = std::make_unique<LogicalExpression>(left, LogicalExpression::AND, right);
+    auto logExp = std::make_unique<LogicalExpression>(left,
+                                                      LogicalExpression::Operator::AND,
+                                                      right);
 
     cpp2::GetNeighborsRequest req;
     std::vector<EdgeType> et = {101};

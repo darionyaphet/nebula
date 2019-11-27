@@ -46,13 +46,13 @@ std::string ShowSentence::toString() const {
 
 std::string SpaceOptItem::toString() const {
     switch (optType_) {
-        case PARTITION_NUM:
+        case OptionType::PARTITION_NUM:
             return folly::stringPrintf("partition_num = %ld", boost::get<int64_t>(optValue_));
-        case REPLICA_FACTOR:
+        case OptionType::REPLICA_FACTOR:
             return folly::stringPrintf("replica_factor = %ld", boost::get<int64_t>(optValue_));
-        case CHARSET:
+        case OptionType::CHARSET:
             return folly::stringPrintf("charset = %s", boost::get<std::string>(optValue_).c_str());
-        case COLLATE:
+        case OptionType::COLLATE:
             return folly::stringPrintf("collate = %s", boost::get<std::string>(optValue_).c_str());
         default:
              FLOG_FATAL("Space parameter illegal");

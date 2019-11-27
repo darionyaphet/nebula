@@ -96,7 +96,7 @@ bool StorageHttpIngestHandler::ingestSSTFiles(GraphSpaceID space) {
     if (code == kvstore::ResultCode::SUCCEEDED) {
         return true;
     } else {
-        LOG(ERROR) << "SSTFile Ingest Failed: " << code;
+        LOG(ERROR) << "SSTFile Ingest Failed: " << static_cast<int8_t>(code);
         return false;
     }
 }

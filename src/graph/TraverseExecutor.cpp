@@ -88,23 +88,23 @@ TraverseExecutor::makeTraverseExecutor(Sentence *sentence, ExecutionContext *ect
 nebula::cpp2::SupportedType TraverseExecutor::calculateExprType(Expression* exp) const {
     auto spaceId = ectx()->rctx()->session()->space();
     switch (exp->kind()) {
-        case Expression::kPrimary:
-        case Expression::kFunctionCall:
-        case Expression::kUnary:
-        case Expression::kArithmetic: {
+        case Expression::Kind::kPrimary:
+        case Expression::Kind::kFunctionCall:
+        case Expression::Kind::kUnary:
+        case Expression::Kind::kArithmetic: {
             return nebula::cpp2::SupportedType::UNKNOWN;
         }
-        case Expression::kTypeCasting: {
+        case Expression::Kind::kTypeCasting: {
             auto exprPtr = static_cast<const TypeCastingExpression *>(exp);
             return SchemaHelper::columnTypeToSupportedType(
                                                     exprPtr->getType());
         }
-        case Expression::kRelational:
-        case Expression::kLogical: {
+        case Expression::Kind::kRelational:
+        case Expression::Kind::kLogical: {
             return nebula::cpp2::SupportedType::BOOL;
         }
-        case Expression::kDestProp:
-        case Expression::kSourceProp: {
+        case Expression::Kind::kDestProp:
+        case Expression::Kind::kSourceProp: {
             auto* tagPropExp = static_cast<const AliasPropertyExpression*>(exp);
             const auto* tagName = tagPropExp->alias();
             const auto* propName = tagPropExp->prop();
@@ -117,15 +117,15 @@ nebula::cpp2::SupportedType TraverseExecutor::calculateExprType(Expression* exp)
             }
             return nebula::cpp2::SupportedType::UNKNOWN;
         }
-        case Expression::kEdgeDstId:
-        case Expression::kEdgeSrcId: {
+        case Expression::Kind::kEdgeDstId:
+        case Expression::Kind::kEdgeSrcId: {
             return nebula::cpp2::SupportedType::VID;
         }
-        case Expression::kEdgeRank:
-        case Expression::kEdgeType: {
+        case Expression::Kind::kEdgeRank:
+        case Expression::Kind::kEdgeType: {
             return nebula::cpp2::SupportedType::INT;
         }
-        case Expression::kAliasProp: {
+        case Expression::Kind::kAliasProp: {
             auto* edgeExp = static_cast<const AliasPropertyExpression*>(exp);
             const auto* propName = edgeExp->prop();
             auto edgeStatus = ectx()->schemaManager()->toEdgeType(spaceId, *edgeExp->alias());
@@ -138,8 +138,8 @@ nebula::cpp2::SupportedType TraverseExecutor::calculateExprType(Expression* exp)
             }
             return nebula::cpp2::SupportedType::UNKNOWN;
         }
-        case Expression::kVariableProp:
-        case Expression::kInputProp: {
+        case Expression::Kind::kVariableProp:
+        case Expression::Kind::kInputProp: {
             auto* propExp = static_cast<const AliasPropertyExpression*>(exp);
             const auto* propName = propExp->prop();
             if (inputs_ == nullptr) {
@@ -440,7 +440,7 @@ Status WhereWrapper::prepare(ExpressionContext *ectx) {
 
 bool WhereWrapper::rewrite(Expression *expr) const {
     switch (expr->kind()) {
-        case Expression::kLogical: {
+        case Expression::Kind::kLogical: {
             auto *logExpr = static_cast<LogicalExpression*>(expr);
             // Rewrite rule will not be applied to XOR
             if (logExpr->op() == LogicalExpression::Operator::XOR) {
@@ -472,31 +472,31 @@ bool WhereWrapper::rewrite(Expression *expr) const {
                     return false;
             }
         }
-        case Expression::kUnary:
-        case Expression::kTypeCasting:
-        case Expression::kArithmetic:
-        case Expression::kRelational:
-        case Expression::kFunctionCall: {
+        case Expression::Kind::kUnary:
+        case Expression::Kind::kTypeCasting:
+        case Expression::Kind::kArithmetic:
+        case Expression::Kind::kRelational:
+        case Expression::Kind::kFunctionCall: {
             return canPushdown(expr);
         }
-        case Expression::kPrimary:
-        case Expression::kSourceProp:
-        case Expression::kEdgeRank:
-        case Expression::kEdgeDstId:
-        case Expression::kEdgeSrcId:
-        case Expression::kEdgeType:
-        case Expression::kAliasProp: {
+        case Expression::Kind::kPrimary:
+        case Expression::Kind::kSourceProp:
+        case Expression::Kind::kEdgeRank:
+        case Expression::Kind::kEdgeDstId:
+        case Expression::Kind::kEdgeSrcId:
+        case Expression::Kind::kEdgeType:
+        case Expression::Kind::kAliasProp: {
             return true;
         }
-        case Expression::kMax:
-        case Expression::kVariableProp:
-        case Expression::kDestProp:
-        case Expression::kInputProp:
-        case Expression::kUUID: {
+        case Expression::Kind::kMax:
+        case Expression::Kind::kVariableProp:
+        case Expression::Kind::kDestProp:
+        case Expression::Kind::kInputProp:
+        case Expression::Kind::kUUID: {
             return false;
         }
         default: {
-            LOG(ERROR) << "Unkown expression: " << expr->kind();
+            LOG(ERROR) << "Unkown expression";
             return false;
         }
     }

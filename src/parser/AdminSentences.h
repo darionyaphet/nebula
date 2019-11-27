@@ -89,7 +89,7 @@ class SpaceOptItem final {
 public:
     using Value = boost::variant<int64_t, std::string>;
 
-    enum OptionType : uint8_t {
+    enum class OptionType : uint8_t {
         PARTITION_NUM,
         REPLICA_FACTOR,
         CHARSET,

@@ -322,7 +322,7 @@ primary_expression
         $$ = new PrimaryExpression(-$2);;
     }
     | MINUS base_expression {
-        $$ = new UnaryExpression(UnaryExpression::NEGATE, $2);
+        $$ = new UnaryExpression(UnaryExpression::Operator::NEGATE, $2);
     }
     | base_expression {
         $$ = $1;
@@ -456,13 +456,13 @@ argument_list
 unary_expression
     : primary_expression { $$ = $1; }
     | PLUS unary_expression {
-        $$ = new UnaryExpression(UnaryExpression::PLUS, $2);
+        $$ = new UnaryExpression(UnaryExpression::Operator::PLUS, $2);
     }
     | NOT unary_expression {
-        $$ = new UnaryExpression(UnaryExpression::NOT, $2);
+        $$ = new UnaryExpression(UnaryExpression::Operator::NOT, $2);
     }
     | KW_NOT unary_expression {
-        $$ = new UnaryExpression(UnaryExpression::NOT, $2);
+        $$ = new UnaryExpression(UnaryExpression::Operator::NOT, $2);
     }
     | L_PAREN type_spec R_PAREN unary_expression {
         $$ = new TypeCastingExpression($2, $4);
@@ -481,83 +481,83 @@ type_spec
 arithmetic_xor_expression
     : unary_expression { $$ = $1; }
     | arithmetic_xor_expression XOR unary_expression {
-        $$ = new ArithmeticExpression($1, ArithmeticExpression::XOR, $3);
+        $$ = new ArithmeticExpression($1, ArithmeticExpression::Operator::XOR, $3);
     }
     ;
 
 multiplicative_expression
     : arithmetic_xor_expression { $$ = $1; }
     | multiplicative_expression MUL arithmetic_xor_expression {
-        $$ = new ArithmeticExpression($1, ArithmeticExpression::MUL, $3);
+        $$ = new ArithmeticExpression($1, ArithmeticExpression::Operator::MUL, $3);
     }
     | multiplicative_expression DIV arithmetic_xor_expression {
-        $$ = new ArithmeticExpression($1, ArithmeticExpression::DIV, $3);
+        $$ = new ArithmeticExpression($1, ArithmeticExpression::Operator::DIV, $3);
     }
     | multiplicative_expression MOD arithmetic_xor_expression {
-        $$ = new ArithmeticExpression($1, ArithmeticExpression::MOD, $3);
+        $$ = new ArithmeticExpression($1, ArithmeticExpression::Operator::MOD, $3);
     }
     ;
 
 additive_expression
     : multiplicative_expression { $$ = $1; }
     | additive_expression PLUS multiplicative_expression {
-        $$ = new ArithmeticExpression($1, ArithmeticExpression::ADD, $3);
+        $$ = new ArithmeticExpression($1, ArithmeticExpression::Operator::ADD, $3);
     }
     | additive_expression MINUS multiplicative_expression {
-        $$ = new ArithmeticExpression($1, ArithmeticExpression::SUB, $3);
+        $$ = new ArithmeticExpression($1, ArithmeticExpression::Operator::SUB, $3);
     }
     ;
 
 relational_expression
     : additive_expression { $$ = $1; }
     | relational_expression LT additive_expression {
-        $$ = new RelationalExpression($1, RelationalExpression::LT, $3);
+        $$ = new RelationalExpression($1, RelationalExpression::Operator::LT, $3);
     }
     | relational_expression GT additive_expression {
-        $$ = new RelationalExpression($1, RelationalExpression::GT, $3);
+        $$ = new RelationalExpression($1, RelationalExpression::Operator::GT, $3);
     }
     | relational_expression LE additive_expression {
-        $$ = new RelationalExpression($1, RelationalExpression::LE, $3);
+        $$ = new RelationalExpression($1, RelationalExpression::Operator::LE, $3);
     }
     | relational_expression GE additive_expression {
-        $$ = new RelationalExpression($1, RelationalExpression::GE, $3);
+        $$ = new RelationalExpression($1, RelationalExpression::Operator::GE, $3);
     }
     ;
 
 equality_expression
     : relational_expression { $$ = $1; }
     | equality_expression EQ relational_expression {
-        $$ = new RelationalExpression($1, RelationalExpression::EQ, $3);
+        $$ = new RelationalExpression($1, RelationalExpression::Operator::EQ, $3);
     }
     | equality_expression NE relational_expression {
-        $$ = new RelationalExpression($1, RelationalExpression::NE, $3);
+        $$ = new RelationalExpression($1, RelationalExpression::Operator::NE, $3);
     }
     ;
 
 logic_and_expression
     : equality_expression { $$ = $1; }
     | logic_and_expression AND equality_expression {
-        $$ = new LogicalExpression($1, LogicalExpression::AND, $3);
+        $$ = new LogicalExpression($1, LogicalExpression::Operator::AND, $3);
     }
     | logic_and_expression KW_AND equality_expression {
-        $$ = new LogicalExpression($1, LogicalExpression::AND, $3);
+        $$ = new LogicalExpression($1, LogicalExpression::Operator::AND, $3);
     }
     ;
 
 logic_or_expression
     : logic_and_expression { $$ = $1; }
     | logic_or_expression OR logic_and_expression {
-        $$ = new LogicalExpression($1, LogicalExpression::OR, $3);
+        $$ = new LogicalExpression($1, LogicalExpression::Operator::OR, $3);
     }
     | logic_or_expression KW_OR logic_and_expression {
-        $$ = new LogicalExpression($1, LogicalExpression::OR, $3);
+        $$ = new LogicalExpression($1, LogicalExpression::Operator::OR, $3);
     }
     ;
 
 logic_xor_expression
     : logic_or_expression { $$ = $1; }
     | logic_xor_expression KW_XOR logic_or_expression {
-        $$ = new LogicalExpression($1, LogicalExpression::XOR, $3);
+        $$ = new LogicalExpression($1, LogicalExpression::Operator::XOR, $3);
     }
     ;
 
@@ -797,25 +797,25 @@ lookup_sentence
 
 order_factor
     : input_ref_expression {
-        $$ = new OrderFactor($1, OrderFactor::ASCEND);
+        $$ = new OrderFactor($1, OrderFactor::OrderType::ASCEND);
     }
     | input_ref_expression KW_ASC {
-        $$ = new OrderFactor($1, OrderFactor::ASCEND);
+        $$ = new OrderFactor($1, OrderFactor::OrderType::ASCEND);
     }
     | input_ref_expression KW_DESC {
-        $$ = new OrderFactor($1, OrderFactor::DESCEND);
+        $$ = new OrderFactor($1, OrderFactor::OrderType::DESCEND);
     }
     | LABEL {
         auto inputRef = new InputPropertyExpression($1);
-        $$ = new OrderFactor(inputRef, OrderFactor::ASCEND);
+        $$ = new OrderFactor(inputRef, OrderFactor::OrderType::ASCEND);
     }
     | LABEL KW_ASC {
         auto inputRef = new InputPropertyExpression($1);
-        $$ = new OrderFactor(inputRef, OrderFactor::ASCEND);
+        $$ = new OrderFactor(inputRef, OrderFactor::OrderType::ASCEND);
     }
     | LABEL KW_DESC {
         auto inputRef = new InputPropertyExpression($1);
-        $$ = new OrderFactor(inputRef, OrderFactor::DESCEND);
+        $$ = new OrderFactor(inputRef, OrderFactor::OrderType::DESCEND);
     }
     ;
 
@@ -1272,19 +1272,19 @@ piped_sentence
 
 set_sentence
     : piped_sentence { $$ = $1; }
-    | set_sentence KW_UNION KW_ALL piped_sentence { $$ = new SetSentence($1, SetSentence::UNION, $4); }
+    | set_sentence KW_UNION KW_ALL piped_sentence { $$ = new SetSentence($1, SetSentence::Operator::UNION, $4); }
     | set_sentence KW_UNION piped_sentence {
-        auto *s = new SetSentence($1, SetSentence::UNION, $3);
+        auto *s = new SetSentence($1, SetSentence::Operator::UNION, $3);
         s->setDistinct();
         $$ = s;
     }
     | set_sentence KW_UNION KW_DISTINCT piped_sentence {
-        auto *s = new SetSentence($1, SetSentence::UNION, $4);
+        auto *s = new SetSentence($1, SetSentence::Operator::UNION, $4);
         s->setDistinct();
         $$ = s;
     }
-    | set_sentence KW_INTERSECT piped_sentence { $$ = new SetSentence($1, SetSentence::INTERSECT, $3); }
-    | set_sentence KW_MINUS piped_sentence { $$ = new SetSentence($1, SetSentence::MINUS, $3); }
+    | set_sentence KW_INTERSECT piped_sentence { $$ = new SetSentence($1, SetSentence::Operator::INTERSECT, $3); }
+    | set_sentence KW_MINUS piped_sentence { $$ = new SetSentence($1, SetSentence::Operator::MINUS, $3); }
     ;
 
 assignment_sentence
@@ -1740,20 +1740,20 @@ space_opt_list
 space_opt_item
     : KW_PARTITION_NUM ASSIGN INTEGER {
         ifOutOfRange($3, @3);
-        $$ = new SpaceOptItem(SpaceOptItem::PARTITION_NUM, $3);
+        $$ = new SpaceOptItem(SpaceOptItem::OptionType::PARTITION_NUM, $3);
     }
     | KW_REPLICA_FACTOR ASSIGN INTEGER {
         ifOutOfRange($3, @3);
-        $$ = new SpaceOptItem(SpaceOptItem::REPLICA_FACTOR, $3);
+        $$ = new SpaceOptItem(SpaceOptItem::OptionType::REPLICA_FACTOR, $3);
     }
     | KW_CHARSET ASSIGN name_label {
         // Currently support utf8, it is an alias for utf8mb4
-        $$ = new SpaceOptItem(SpaceOptItem::CHARSET, *$3);
+        $$ = new SpaceOptItem(SpaceOptItem::OptionType::CHARSET, *$3);
         delete $3;
     }
     | KW_COLLATE ASSIGN name_label {
         // Currently support utf8_bin, it is an alias for utf8mb4_bin
-        $$ = new SpaceOptItem(SpaceOptItem::COLLATE, *$3);
+        $$ = new SpaceOptItem(SpaceOptItem::OptionType::COLLATE, *$3);
         delete $3;
     }
     // TODO(YT) Create Spaces for different engines

@@ -49,39 +49,39 @@ void Expression::print(const VariantType &value) {
 
 std::unique_ptr<Expression> Expression::makeExpr(uint8_t kind) {
     switch (intToKind(kind)) {
-        case kPrimary:
+        case Kind::kPrimary:
             return std::make_unique<PrimaryExpression>();
-        case kFunctionCall:
+        case Kind::kFunctionCall:
             return std::make_unique<FunctionCallExpression>();
-        case kUnary:
+        case Kind::kUnary:
             return std::make_unique<UnaryExpression>();
-        case kTypeCasting:
+        case Kind::kTypeCasting:
             return std::make_unique<TypeCastingExpression>();
-        case kUUID:
+        case Kind::kUUID:
             return std::make_unique<UUIDExpression>();
-        case kArithmetic:
+        case Kind::kArithmetic:
             return std::make_unique<ArithmeticExpression>();
-        case kRelational:
+        case Kind::kRelational:
             return std::make_unique<RelationalExpression>();
-        case kLogical:
+        case Kind::kLogical:
             return std::make_unique<LogicalExpression>();
-        case kSourceProp:
+        case Kind::kSourceProp:
             return std::make_unique<SourcePropertyExpression>();
-        case kEdgeRank:
+        case Kind::kEdgeRank:
             return std::make_unique<EdgeRankExpression>();
-        case kEdgeDstId:
+        case Kind::kEdgeDstId:
             return std::make_unique<EdgeDstIdExpression>();
-        case kEdgeSrcId:
+        case Kind::kEdgeSrcId:
             return std::make_unique<EdgeSrcIdExpression>();
-        case kEdgeType:
+        case Kind::kEdgeType:
             return std::make_unique<EdgeTypeExpression>();
-        case kAliasProp:
+        case Kind::kAliasProp:
             return std::make_unique<AliasPropertyExpression>();
-        case kVariableProp:
+        case Kind::kVariableProp:
             return std::make_unique<VariablePropertyExpression>();
-        case kDestProp:
+        case Kind::kDestProp:
             return std::make_unique<DestPropertyExpression>();
-        case kInputProp:
+        case Kind::kInputProp:
             return std::make_unique<InputPropertyExpression>();
         default:
             throw Status::Error("Illegal expression kind: %u", kind);
@@ -191,7 +191,7 @@ const char* AliasPropertyExpression::decode(const char *pos, const char *end) {
 }
 
 InputPropertyExpression::InputPropertyExpression(std::string *prop) {
-    kind_ = kInputProp;
+    kind_ = Kind::kInputProp;
     ref_.reset(new std::string(INPUT_REF));
     alias_.reset(new std::string(""));
     prop_.reset(prop);
@@ -212,7 +212,7 @@ OptVariantType InputPropertyExpression::eval(Getters &getters) const {
 
 
 DestPropertyExpression::DestPropertyExpression(std::string *tag, std::string *prop) {
-    kind_ = kDestProp;
+    kind_ = Kind::kDestProp;
     ref_.reset(new std::string(DST_REF));
     alias_.reset(tag);
     prop_.reset(prop);
@@ -233,7 +233,7 @@ Status DestPropertyExpression::prepare() {
 
 
 VariablePropertyExpression::VariablePropertyExpression(std::string *var, std::string *prop) {
-    kind_ = kVariableProp;
+    kind_ = Kind::kVariableProp;
     ref_.reset(new std::string(VAR_REF));
     alias_.reset(var);
     prop_.reset(prop);
@@ -306,7 +306,7 @@ Status EdgeRankExpression::prepare() {
 
 
 SourcePropertyExpression::SourcePropertyExpression(std::string *tag, std::string *prop) {
-    kind_ = kSourceProp;
+    kind_ = Kind::kSourceProp;
     ref_.reset(new std::string(SRC_REF));
     alias_.reset(tag);
     prop_.reset(prop);
@@ -548,13 +548,13 @@ std::string UnaryExpression::toString() const {
     std::string buf;
     buf.reserve(256);
     switch (op_) {
-        case PLUS:
+        case Operator::PLUS:
             buf += '+';
             break;
-        case NEGATE:
+        case Operator::NEGATE:
             buf += '-';
             break;
-        case NOT:
+        case Operator::NOT:
             buf += '!';
             break;
     }
@@ -567,9 +567,9 @@ std::string UnaryExpression::toString() const {
 OptVariantType UnaryExpression::eval(Getters &getters) const {
     auto value = operand_->eval(getters);
     if (value.ok()) {
-        if (op_ == PLUS) {
+        if (op_ == Operator::PLUS) {
             return value;
-        } else if (op_ == NEGATE) {
+        } else if (op_ == Operator::NEGATE) {
             if (isInt(value.value())) {
                 return OptVariantType(-asInt(value.value()));
             } else if (isDouble(value.value())) {
@@ -600,7 +600,7 @@ void UnaryExpression::encode(Cord &cord) const {
 const char* UnaryExpression::decode(const char *pos, const char *end) {
     THROW_IF_NO_SPACE(pos, end, 2UL);
     op_ = *reinterpret_cast<const Operator*>(pos++);
-    DCHECK(op_ == PLUS || op_ == NEGATE || op_ == NOT);
+    DCHECK(op_ == Operator::PLUS || op_ == Operator::NEGATE || op_ == Operator::NOT);
 
     operand_ = makeExpr(*reinterpret_cast<const uint8_t*>(pos++));
     return operand_->decode(pos, end);
@@ -678,22 +678,22 @@ std::string ArithmeticExpression::toString() const {
     buf += '(';
     buf.append(left_->toString());
     switch (op_) {
-        case ADD:
+        case Operator::ADD:
             buf += '+';
             break;
-        case SUB:
+        case Operator::SUB:
             buf += '-';
             break;
-        case MUL:
+        case Operator::MUL:
             buf += '*';
             break;
-        case DIV:
+        case Operator::DIV:
             buf += '/';
             break;
-        case MOD:
+        case Operator::MOD:
             buf += '%';
             break;
-        case XOR:
+        case Operator::XOR:
             buf += '^';
             break;
     }
@@ -754,7 +754,7 @@ OptVariantType ArithmeticExpression::eval(Getters &getters) const {
     };
 
     switch (op_) {
-        case ADD:
+        case Operator::ADD:
             if (isArithmetic(l) && isArithmetic(r)) {
                 if (isDouble(l) || isDouble(r)) {
                     return OptVariantType(asDouble(l) + asDouble(r));
@@ -772,7 +772,7 @@ OptVariantType ArithmeticExpression::eval(Getters &getters) const {
                 return OptVariantType(asString(l) + asString(r));
             }
             break;
-        case SUB:
+        case Operator::SUB:
             if (isArithmetic(l) && isArithmetic(r)) {
                 if (isDouble(l) || isDouble(r)) {
                     return OptVariantType(asDouble(l) - asDouble(r));
@@ -786,7 +786,7 @@ OptVariantType ArithmeticExpression::eval(Getters &getters) const {
                 return OptVariantType(lValue - rValue);
             }
             break;
-        case MUL:
+        case Operator::MUL:
             if (isArithmetic(l) && isArithmetic(r)) {
                 if (isDouble(l) || isDouble(r)) {
                     return OptVariantType(asDouble(l) * asDouble(r));
@@ -799,7 +799,7 @@ OptVariantType ArithmeticExpression::eval(Getters &getters) const {
                 return OptVariantType(lValue * rValue);
             }
             break;
-        case DIV:
+        case Operator::DIV:
             if (isArithmetic(l) && isArithmetic(r)) {
                 if (isDouble(l) || isDouble(r)) {
                     if (abs(asDouble(r)) < 1e-8) {
@@ -816,7 +816,7 @@ OptVariantType ArithmeticExpression::eval(Getters &getters) const {
                 return OptVariantType(asInt(l) / asInt(r));
             }
             break;
-        case MOD:
+        case Operator::MOD:
             if (isArithmetic(l) && isArithmetic(r)) {
                 if (isDouble(l) || isDouble(r)) {
                     if (abs(asDouble(r)) < 1e-8) {
@@ -832,7 +832,7 @@ OptVariantType ArithmeticExpression::eval(Getters &getters) const {
                 return OptVariantType(asInt(l) % asInt(r));
             }
             break;
-        case XOR:
+        case Operator::XOR:
             if (isArithmetic(l) && isArithmetic(r)) {
                 if (isDouble(l) || isDouble(r)) {
                     return (static_cast<int64_t>(std::round(asDouble(l)))
@@ -874,7 +874,8 @@ void ArithmeticExpression::encode(Cord &cord) const {
 const char* ArithmeticExpression::decode(const char *pos, const char *end) {
     THROW_IF_NO_SPACE(pos, end, 2UL);
     op_ = *reinterpret_cast<const Operator*>(pos++);
-    DCHECK(op_ == ADD || op_ == SUB || op_ == MUL || op_ == DIV || op_ == MOD);
+    DCHECK(op_ == Operator::ADD || op_ == Operator::SUB || op_ == Operator::MUL ||
+           op_ == Operator::DIV || op_ == Operator::MOD);
 
     left_ = makeExpr(*reinterpret_cast<const uint8_t*>(pos++));
     pos = left_->decode(pos, end);
@@ -891,22 +892,22 @@ std::string RelationalExpression::toString() const {
     buf += '(';
     buf.append(left_->toString());
     switch (op_) {
-        case LT:
+        case Operator::LT:
             buf += '<';
             break;
-        case LE:
+        case Operator::LE:
             buf += "<=";
             break;
-        case GT:
+        case Operator::GT:
             buf += '>';
             break;
-        case GE:
+        case Operator::GE:
             buf += ">=";
             break;
-        case EQ:
+        case Operator::EQ:
             buf += "==";
             break;
-        case NE:
+        case Operator::NE:
             buf += "!=";
             break;
     }
@@ -937,15 +938,15 @@ OptVariantType RelationalExpression::eval(Getters &getters) const {
     }
 
     switch (op_) {
-        case LT:
+        case Operator::LT:
             return OptVariantType(l < r);
-        case LE:
+        case Operator::LE:
             return OptVariantType(l <= r);
-        case GT:
+        case Operator::GT:
             return OptVariantType(l > r);
-        case GE:
+        case Operator::GE:
             return OptVariantType(l >= r);
-        case EQ:
+        case Operator::EQ:
             if (isArithmetic(l) && isArithmetic(r)) {
                 if (isDouble(l) || isDouble(r)) {
                     return OptVariantType(
@@ -953,7 +954,7 @@ OptVariantType RelationalExpression::eval(Getters &getters) const {
                 }
             }
             return OptVariantType(l == r);
-        case NE:
+        case Operator::NE:
             if (isArithmetic(l) && isArithmetic(r)) {
                 if (isDouble(l) || isDouble(r)) {
                     return OptVariantType(
@@ -1010,7 +1011,8 @@ void RelationalExpression::encode(Cord &cord) const {
 const char* RelationalExpression::decode(const char *pos, const char *end) {
     THROW_IF_NO_SPACE(pos, end, 2UL);
     op_ = *reinterpret_cast<const Operator*>(pos++);
-    DCHECK(op_ == LT || op_ == LE || op_ == GT || op_ == GE || op_ == EQ || op_ == NE);
+    DCHECK(op_ == Operator::LT || op_ == Operator::LE || op_ == Operator::GT ||
+           op_ == Operator::GE || op_ == Operator::EQ || op_ == Operator::NE);
 
     left_ = makeExpr(*reinterpret_cast<const uint8_t*>(pos++));
     pos = left_->decode(pos, end);
@@ -1027,13 +1029,13 @@ std::string LogicalExpression::toString() const {
     buf += '(';
     buf.append(left_->toString());
     switch (op_) {
-        case AND:
+        case Operator::AND:
             buf += "&&";
             break;
-        case OR:
+        case Operator::OR:
             buf += "||";
             break;
-        case XOR:
+        case Operator::XOR:
             buf += "XOR";
             break;
     }
@@ -1054,12 +1056,12 @@ OptVariantType LogicalExpression::eval(Getters &getters) const {
         return right;
     }
 
-    if (op_ == AND) {
+    if (op_ == Operator::AND) {
         if (!asBool(left.value())) {
             return OptVariantType(false);
         }
         return OptVariantType(asBool(right.value()));
-    } else if (op_ == OR) {
+    } else if (op_ == Operator::OR) {
         if (asBool(left.value())) {
             return OptVariantType(true);
         }
@@ -1092,7 +1094,7 @@ void LogicalExpression::encode(Cord &cord) const {
 const char* LogicalExpression::decode(const char *pos, const char *end) {
     THROW_IF_NO_SPACE(pos, end, 2UL);
     op_ = *reinterpret_cast<const Operator*>(pos++);
-    DCHECK(op_ == AND || op_ == OR || op_ == XOR);
+    DCHECK(op_ == Operator::AND || op_ == Operator::OR || op_ == Operator::XOR);
 
     left_ = makeExpr(*reinterpret_cast<const uint8_t*>(pos++));
     pos = left_->decode(pos, end);

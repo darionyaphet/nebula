@@ -780,11 +780,11 @@ TEST(IndexScanTest, AccurateScanTest) {
                                              RelationalExpression::Operator::EQ,
                                              pe2);
         auto* le1 = new LogicalExpression(r1,
-                                          LogicalExpression::AND,
+                                          LogicalExpression::Operator::AND,
                                           r2);
 
         auto logExp = std::make_unique<LogicalExpression>(le1,
-                                                          LogicalExpression::AND,
+                                                          LogicalExpression::Operator::AND,
                                                           r3);
         auto resp = execLookupVertices(Expression::encode(logExp.get()));
         EXPECT_EQ(0, resp.result.failed_codes.size());
@@ -822,11 +822,11 @@ TEST(IndexScanTest, AccurateScanTest) {
                                              RelationalExpression::Operator::EQ,
                                              pe2);
         auto* le1 = new LogicalExpression(r1,
-                                          LogicalExpression::AND,
+                                          LogicalExpression::Operator::AND,
                                           r2);
 
         auto logExp = std::make_unique<LogicalExpression>(le1,
-                                                          LogicalExpression::AND,
+                                                          LogicalExpression::Operator::AND,
                                                           r3);
         auto resp = execLookupEdges(Expression::encode(logExp.get()));
 
@@ -930,7 +930,7 @@ TEST(IndexScanTest, PrefixScanTest) {
                                              pe1);
 
         auto logExp = std::make_unique<LogicalExpression>(r1,
-                                                          LogicalExpression::AND,
+                                                          LogicalExpression::Operator::AND,
                                                           r2);
         auto resp = execLookupVertices(Expression::encode(logExp.get()));
         EXPECT_EQ(0, resp.result.failed_codes.size());
@@ -960,7 +960,7 @@ TEST(IndexScanTest, PrefixScanTest) {
                                              pe1);
 
         auto logExp = std::make_unique<LogicalExpression>(r1,
-                                                          LogicalExpression::AND,
+                                                          LogicalExpression::Operator::AND,
                                                           r2);
         auto resp = execLookupEdges(Expression::encode(logExp.get()));
         EXPECT_EQ(0, resp.result.failed_codes.size());
@@ -993,7 +993,7 @@ TEST(IndexScanTest, NoReturnColumnsTest) {
                                              pe1);
 
         auto logExp = std::make_unique<LogicalExpression>(r1,
-                                                          LogicalExpression::AND,
+                                                          LogicalExpression::Operator::AND,
                                                           r2);
         auto resp = execLookupVertices(Expression::encode(logExp.get()), false);
         EXPECT_EQ(0, resp.result.failed_codes.size());
@@ -1023,7 +1023,7 @@ TEST(IndexScanTest, NoReturnColumnsTest) {
                                              pe1);
 
         auto logExp = std::make_unique<LogicalExpression>(r1,
-                                                          LogicalExpression::AND,
+                                                          LogicalExpression::Operator::AND,
                                                           r2);
         auto resp = execLookupEdges(Expression::encode(logExp.get()), false);
         EXPECT_EQ(0, resp.result.failed_codes.size());

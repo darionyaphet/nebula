@@ -194,9 +194,9 @@ QueryBaseProcessor<REQ, RESP>::getEdgeTTLInfo(EdgeType edgeType) {
 template<typename REQ, typename RESP>
 bool QueryBaseProcessor<REQ, RESP>::checkExp(const Expression* exp) {
     switch (exp->kind()) {
-        case Expression::kPrimary:
+        case Expression::Kind::kPrimary:
             return true;
-        case Expression::kFunctionCall: {
+        case Expression::Kind::kFunctionCall: {
             auto* funcExp = static_cast<FunctionCallExpression*>(
                               const_cast<Expression*>(exp));
             auto* name = funcExp->name();
@@ -213,27 +213,27 @@ bool QueryBaseProcessor<REQ, RESP>::checkExp(const Expression* exp) {
             funcExp->setFunc(std::move(func).value());
             return true;
         }
-        case Expression::kUnary: {
+        case Expression::Kind::kUnary: {
             auto* unaExp = static_cast<const UnaryExpression*>(exp);
             return checkExp(unaExp->operand());
         }
-        case Expression::kTypeCasting: {
+        case Expression::Kind::kTypeCasting: {
             auto* typExp = static_cast<const TypeCastingExpression*>(exp);
             return checkExp(typExp->operand());
         }
-        case Expression::kArithmetic: {
+        case Expression::Kind::kArithmetic: {
             auto* ariExp = static_cast<const ArithmeticExpression*>(exp);
             return checkExp(ariExp->left()) && checkExp(ariExp->right());
         }
-        case Expression::kRelational: {
+        case Expression::Kind::kRelational: {
             auto* relExp = static_cast<const RelationalExpression*>(exp);
             return checkExp(relExp->left()) && checkExp(relExp->right());
         }
-        case Expression::kLogical: {
+        case Expression::Kind::kLogical: {
             auto* logExp = static_cast<const LogicalExpression*>(exp);
             return checkExp(logExp->left()) && checkExp(logExp->right());
         }
-        case Expression::kSourceProp: {
+        case Expression::Kind::kSourceProp: {
             auto* sourceExp = static_cast<const SourcePropertyExpression*>(exp);
             const auto* tagName = sourceExp->alias();
             const auto* propName = sourceExp->prop();
@@ -271,13 +271,13 @@ bool QueryBaseProcessor<REQ, RESP>::checkExp(const Expression* exp) {
             tagContexts_.emplace_back(std::move(tc));
             return true;
         }
-        case Expression::kEdgeRank:
-        case Expression::kEdgeDstId:
-        case Expression::kEdgeSrcId:
-        case Expression::kEdgeType: {
+        case Expression::Kind::kEdgeRank:
+        case Expression::Kind::kEdgeDstId:
+        case Expression::Kind::kEdgeSrcId:
+        case Expression::Kind::kEdgeType: {
             return true;
         }
-        case Expression::kAliasProp: {
+        case Expression::Kind::kAliasProp: {
             if (edgeContexts_.empty()) {
                 VLOG(1) << "No edge requested!";
                 return false;
@@ -308,9 +308,9 @@ bool QueryBaseProcessor<REQ, RESP>::checkExp(const Expression* exp) {
             }
             return true;
         }
-        case Expression::kVariableProp:
-        case Expression::kDestProp:
-        case Expression::kInputProp: {
+        case Expression::Kind::kVariableProp:
+        case Expression::Kind::kDestProp:
+        case Expression::Kind::kInputProp: {
             return false;
         }
         default: {

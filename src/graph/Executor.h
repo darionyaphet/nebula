@@ -50,7 +50,7 @@ public:
 
     virtual const char* name() const = 0;
 
-    enum ProcessControl : uint8_t {
+    enum class ProcessControl : uint8_t {
         kNext = 0,
         kReturn,
     };

@@ -9,6 +9,7 @@
 
 #include "base/Base.h"
 #include "graph/TraverseExecutor.h"
+#include "graph/InterimResult.h"
 #include "storage/client/StorageClient.h"
 
 DECLARE_bool(filter_pushdown);
@@ -198,15 +199,21 @@ private:
 
     OptVariantType getPropFromInterim(VertexID id, const std::string &prop) const;
 
-    enum FromType {
+    enum class FromType {
         kInstantExpr,
         kVariable,
         kPipe,
     };
 
+    /*
+    nebula::cpp2::SupportedType getPropTypeFromInterim(const std::string &prop) const;
+
+    nebula::cpp2::SupportedType calculateExprType(Expression* exp) const;
+    */
+
 private:
     GoSentence                                 *sentence_{nullptr};
-    FromType                                    fromType_{kInstantExpr};
+    FromType                                    fromType_{FromType::kInstantExpr};
     uint32_t                                    steps_{1};
     uint32_t                                    curStep_{1};
     bool                                        upto_{false};

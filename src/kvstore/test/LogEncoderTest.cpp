@@ -16,7 +16,7 @@ TEST(LogEncoderTest, SingleValueTest) {
     // Normal value
     {
         std::string val("Hello World");
-        auto encoded = encodeSingleValue(OP_REMOVE, val);
+        auto encoded = encodeSingleValue(LogType::OP_REMOVE, val);
         ASSERT_EQ(sizeof(int64_t) + sizeof(uint32_t) + val.size() + 1, encoded.size());
 
         auto decoded = decodeSingleValue(encoded);
@@ -25,7 +25,7 @@ TEST(LogEncoderTest, SingleValueTest) {
     // Empty value
     {
         std::string val;
-        auto encoded = encodeSingleValue(OP_REMOVE, val);
+        auto encoded = encodeSingleValue(LogType::OP_REMOVE, val);
         ASSERT_EQ(sizeof(int64_t) + sizeof(uint32_t) + 1, encoded.size());
 
         auto decoded = decodeSingleValue(encoded);
@@ -38,7 +38,7 @@ TEST(LogEncoderTest, MultiValuesTest) {
     // Empty values
     {
         std::vector<std::string> values;
-        auto encoded = encodeMultiValues(OP_MULTI_REMOVE, values);
+        auto encoded = encodeMultiValues(LogType::OP_MULTI_REMOVE, values);
         ASSERT_EQ(1 + sizeof(uint32_t) + sizeof(int64_t), encoded.size());
 
         auto decoded = decodeMultiValues(encoded);
@@ -56,7 +56,7 @@ TEST(LogEncoderTest, MultiValuesTest) {
         for (int i = 0; i < 2; i++) {
             values.emplace_back();
         }
-        auto encoded = encodeMultiValues(OP_MULTI_REMOVE, values);
+        auto encoded = encodeMultiValues(LogType::OP_MULTI_REMOVE, values);
         auto decoded = decodeMultiValues(encoded);
         ASSERT_EQ(5, decoded.size());
         for (int i = 0; i < 3; i++) {
@@ -73,13 +73,13 @@ TEST(LogEncoderTest, MultiValuesTest) {
         std::string v2("World");
         std::string v3;
 
-        auto encoded = encodeMultiValues(OP_PUT, v1, v2);
+        auto encoded = encodeMultiValues(LogType::OP_PUT, v1, v2);
         auto decoded = decodeMultiValues(encoded);
         EXPECT_EQ(2, decoded.size());
         EXPECT_EQ(v1, decoded[0].toString());
         EXPECT_EQ(v2, decoded[1].toString());
 
-        encoded = encodeMultiValues(OP_PUT, v3, v2);
+        encoded = encodeMultiValues(LogType::OP_PUT, v3, v2);
         decoded = decodeMultiValues(encoded);
         EXPECT_EQ(2, decoded.size());
         EXPECT_TRUE(decoded[0].empty());
@@ -96,7 +96,7 @@ TEST(LogEncoderTest, MultiValuesTest) {
         }
         // 1 empty value
         kvs.emplace_back("Key002", "");
-        auto encoded = encodeMultiValues(OP_MULTI_PUT, kvs);
+        auto encoded = encodeMultiValues(LogType::OP_MULTI_PUT, kvs);
 
         auto decoded = decodeMultiValues(encoded);
         // Total 3 pairs = 6 strings
@@ -122,8 +122,8 @@ TEST(LogEncoderTest, KVTest) {
 }
 
 TEST(LogEncoderTest, HostTest) {
-    auto encoded = encodeHost(OP_ADD_LEARNER, HostAddr(1, 1));
-    auto decoded = decodeHost(OP_ADD_LEARNER, encoded);
+    auto encoded = encodeHost(LogType::OP_ADD_LEARNER, HostAddr(1, 1));
+    auto decoded = decodeHost(LogType::OP_ADD_LEARNER, encoded);
     ASSERT_EQ(HostAddr(1, 1), decoded);
 }
 
@@ -139,13 +139,13 @@ TEST(LogEncoderTest, BatchTest) {
 
     std::vector<std::pair<BatchLogType,
                 std::pair<folly::StringPiece, folly::StringPiece>>> expectd;
-    expectd.emplace_back(OP_BATCH_REMOVE,
+    expectd.emplace_back(BatchLogType::OP_BATCH_REMOVE,
             std::pair<folly::StringPiece, folly::StringPiece>("remove", ""));
-    expectd.emplace_back(OP_BATCH_PUT,
+    expectd.emplace_back(BatchLogType::OP_BATCH_PUT,
             std::pair<folly::StringPiece, folly::StringPiece>("put_key", "put_value"));
-    expectd.emplace_back(OP_BATCH_REMOVE_RANGE,
+    expectd.emplace_back(BatchLogType::OP_BATCH_REMOVE_RANGE,
             std::pair<folly::StringPiece, folly::StringPiece>("begin", "end"));
-    expectd.emplace_back(OP_BATCH_PUT,
+    expectd.emplace_back(BatchLogType::OP_BATCH_PUT,
             std::pair<folly::StringPiece, folly::StringPiece>("put_key_again", "put_value_again"));
     ASSERT_EQ(expectd, decoded);
 }

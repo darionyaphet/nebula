@@ -45,12 +45,12 @@ public:
 
     static cpp2::ErrorCode to(const Status& status) {
         switch (status.code()) {
-        case Status::kOk:
+        case Status::Code::kOk:
             return cpp2::ErrorCode::SUCCEEDED;
-        case Status::kSpaceNotFound:
-        case Status::kHostNotFound:
-        case Status::kTagNotFound:
-        case Status::kUserNotFound:
+        case Status::Code::kSpaceNotFound:
+        case Status::Code::kHostNotFound:
+        case Status::Code::kTagNotFound:
+        case Status::Code::kUserNotFound:
             return cpp2::ErrorCode::E_NOT_FOUND;
         default:
             return cpp2::ErrorCode::E_UNKNOWN;

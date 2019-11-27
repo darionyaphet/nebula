@@ -135,7 +135,8 @@ Status ListHostsProcessor::allHostsWithStatus() {
                                    std::move(removeHostsKey),
                                    [] (kvstore::ResultCode code) {
                 if (code != kvstore::ResultCode::SUCCEEDED) {
-                    LOG(ERROR) << "Async remove long time offline hosts failed: " << code;
+                    LOG(ERROR) << "Async remove long time offline hosts failed: "
+                               << static_cast<int8_t>(code);
                 }
             });
     }

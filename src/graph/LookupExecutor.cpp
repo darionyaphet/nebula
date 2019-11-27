@@ -125,7 +125,7 @@ Status LookupExecutor::prepareYield() {
                 return Status::SyntaxError("Not supported yet");
             }
             auto* prop = col->expr();
-            if (prop->kind() != Expression::kAliasProp) {
+            if (prop->kind() != Expression::Kind::kAliasProp) {
                 return Status::SyntaxError("Expressions other than AliasProp are not supported");
             }
             auto* aExpr = dynamic_cast<const AliasPropertyExpression*>(prop);
@@ -161,7 +161,7 @@ Status LookupExecutor::optimize() {
 
 Status LookupExecutor::traversalExpr(const Expression *expr) {
     switch (expr->kind()) {
-        case nebula::Expression::kLogical : {
+        case nebula::Expression::Kind::kLogical : {
             auto* lExpr = dynamic_cast<const LogicalExpression*>(expr);
             if (lExpr->op() == LogicalExpression::Operator::XOR) {
                 return Status::SyntaxError("Syntax error : %s", lExpr->toString().c_str());
@@ -172,7 +172,7 @@ Status LookupExecutor::traversalExpr(const Expression *expr) {
             traversalExpr(right);
             break;
         }
-        case nebula::Expression::kRelational : {
+        case nebula::Expression::Kind::kRelational : {
             std::string prop;
             VariantType v;
             auto* rExpr = dynamic_cast<const RelationalExpression*>(expr);
@@ -181,11 +181,11 @@ Status LookupExecutor::traversalExpr(const Expression *expr) {
             /**
              *  TODO (sky) : Does not support left expr and right expr are both kAliasProp.
              */
-            if (left->kind() == nebula::Expression::kAliasProp) {
+            if (left->kind() == nebula::Expression::Kind::kAliasProp) {
                 auto* aExpr = dynamic_cast<const AliasPropertyExpression*>(left);
                 prop = *aExpr->prop();
                 filters_.emplace_back(std::make_pair(prop, rExpr->op()));
-            } else if (right->kind() == nebula::Expression::kAliasProp) {
+            } else if (right->kind() == nebula::Expression::Kind::kAliasProp) {
                 auto* aExpr = dynamic_cast<const AliasPropertyExpression*>(right);
                 prop = *aExpr->prop();
                 filters_.emplace_back(std::make_pair(prop, rExpr->op()));
@@ -195,7 +195,7 @@ Status LookupExecutor::traversalExpr(const Expression *expr) {
             }
             break;
         }
-        case nebula::Expression::kFunctionCall : {
+        case nebula::Expression::Kind::kFunctionCall : {
             auto* fExpr = dynamic_cast<const FunctionCallExpression*>(expr);
             auto* name = fExpr->name();
             if (*name == "udf_is_in") {
@@ -281,7 +281,7 @@ LookupExecutor::findValidIndex() {
         for (const auto& field : index->get_fields()) {
             auto it = std::find_if(filters_.begin(), filters_.end(),
                                    [field](const auto &rel) {
-                                       return rel.second == RelationalExpression::EQ;
+                                       return rel.second == RelationalExpression::Operator::EQ;
                                    });
             if (it == filters_.end()) {
                 break;

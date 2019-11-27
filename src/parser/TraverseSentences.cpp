@@ -66,13 +66,13 @@ std::string SetSentence::toString() const {
     buf = "(";
     buf += left_->toString();
     switch (op_) {
-        case UNION:
+        case Operator::UNION:
             buf += " UNION ";
             break;
-        case INTERSECT:
+        case Operator::INTERSECT:
             buf += " INTERSECT ";
             break;
-        case MINUS:
+        case Operator::MINUS:
             buf += " MINUS ";
             break;
     }
@@ -80,6 +80,7 @@ std::string SetSentence::toString() const {
     buf += ")";
     return buf;
 }
+
 
 std::string PipedSentence::toString() const {
     std::string buf;
@@ -102,13 +103,12 @@ std::string AssignmentSentence::toString() const {
 
 std::string OrderFactor::toString() const {
     switch (orderType_) {
-        case ASCEND:
+        case OrderType::ASCEND:
             return folly::stringPrintf("%s ASC,", expr_->toString().c_str());
-        case DESCEND:
+        case OrderType::DESCEND:
             return folly::stringPrintf("%s DESC,", expr_->toString().c_str());
         default:
-
-            LOG(FATAL) << "Unkown Order Type: " << orderType_;
+            LOG(FATAL) << "Unkown Order Type: " << static_cast<int8_t>(orderType_);
             return "";
     }
 }

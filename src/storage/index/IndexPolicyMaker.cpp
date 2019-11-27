@@ -89,7 +89,7 @@ cpp2::ErrorCode IndexPolicyMaker::traversalExpression(const Expression *expr) {
         return OptVariantType(Status::Error("Alias expression cannot be evaluated"));
     };
     switch (expr->kind()) {
-        case nebula::Expression::kLogical : {
+        case nebula::Expression::Kind::kLogical : {
             auto* lExpr = dynamic_cast<const LogicalExpression*>(expr);
             if (lExpr->op() == LogicalExpression::Operator::XOR) {
                 return cpp2::ErrorCode::E_INVALID_FILTER;
@@ -102,13 +102,13 @@ cpp2::ErrorCode IndexPolicyMaker::traversalExpression(const Expression *expr) {
             traversalExpression(right);
             break;
         }
-        case nebula::Expression::kRelational : {
+        case nebula::Expression::Kind::kRelational : {
             std::string prop;
             VariantType v;
             auto* rExpr = dynamic_cast<const RelationalExpression*>(expr);
             auto* left = rExpr->left();
             auto* right = rExpr->right();
-            if (left->kind() == nebula::Expression::kAliasProp) {
+            if (left->kind() == nebula::Expression::Kind::kAliasProp) {
                 auto* aExpr = dynamic_cast<const AliasPropertyExpression*>(left);
                 prop = *aExpr->prop();
                 auto value = right->eval(getters);
@@ -117,7 +117,7 @@ cpp2::ErrorCode IndexPolicyMaker::traversalExpression(const Expression *expr) {
                     return cpp2::ErrorCode::E_INVALID_FILTER;
                 }
                 v = value.value();
-            } else if (right->kind() == nebula::Expression::kAliasProp) {
+            } else if (right->kind() == nebula::Expression::Kind::kAliasProp) {
                 auto value = left->eval(getters);
                 if (!value.ok()) {
                     VLOG(1) << "Can't evaluate the expression " << left->toString();
@@ -133,7 +133,7 @@ cpp2::ErrorCode IndexPolicyMaker::traversalExpression(const Expression *expr) {
             operatorList_.emplace_back(std::make_tuple(std::move(prop), std::move(v), rExpr->op()));
             break;
         }
-        case nebula::Expression::kFunctionCall : {
+        case nebula::Expression::Kind::kFunctionCall : {
             optimizedPolicy_ = false;
             break;
         }

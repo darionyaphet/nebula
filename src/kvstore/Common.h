@@ -33,6 +33,13 @@ enum ResultCode {
     ERR_UNKNOWN             = -100,
 };
 
+/*
+std::ostream& operator<<(std::ostream& os, const ResultCode& code) {
+    os << static_cast<int8_t>(code);
+    return os;
+}
+*/
+
 class KVFilter {
 public:
     KVFilter() = default;
