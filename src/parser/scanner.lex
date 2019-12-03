@@ -142,6 +142,7 @@ BIT_OR                      ([Bb][It][Tt][_][Oo][Rr])
 BIT_XOR                     ([Bb][It][Tt][_][Xx][Oo][Rr])
 IS                          ([Ii][Ss])
 NULL                        ([Nn][Uu][Ll][Ll])
+METRIC                      ([Mm])([Ee])([Tt])([Rr])([Ii])([Cc])
 
 LABEL                       ([a-zA-Z][_a-zA-Z0-9]*)
 DEC                         ([0-9])
@@ -270,6 +271,7 @@ IP_OCTET                    ([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])
 {BIT_XOR}                   { return TokenType::KW_BIT_XOR; }
 {IS}                        { return TokenType::KW_IS; }
 {NULL}                      { return TokenType::KW_NULL; }
+{METRIC}                    { return TokenType::KW_METRIC; }
 
 "."                         { return TokenType::DOT; }
 ","                         { return TokenType::COMMA; }

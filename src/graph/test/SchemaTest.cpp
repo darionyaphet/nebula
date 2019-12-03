@@ -1245,10 +1245,27 @@ TEST_F(SchemaTest, TTLtest) {
         };
         ASSERT_TRUE(verifyResult(resp, expected));
     }
-
+    {
+        cpp2::ExecutionResponse resp;
+        std::string query = "SHOW METRIC";
+        auto code = client->execute(query, resp);
+        ASSERT_EQ(cpp2::ErrorCode::E_STATEMENT_EMTPY, code);
+    }
+    {
+        cpp2::ExecutionResponse resp;
+        std::string query = "SHOW METRIC vertex_props_qps";
+        auto code = client->execute(query, resp);
+        ASSERT_EQ(cpp2::ErrorCode::E_EXECUTION_ERROR, code);
+    }
     {
         cpp2::ExecutionResponse resp;
         std::string query = "DROP SPACE default_space";
+        auto code = client->execute(query, resp);
+        ASSERT_EQ(cpp2::ErrorCode::SUCCEEDED, code);
+    }
+    {
+        cpp2::ExecutionResponse resp;
+        std::string query = "SHOW METRIC vertex_props_qps.rate";
         auto code = client->execute(query, resp);
         ASSERT_EQ(cpp2::ErrorCode::SUCCEEDED, code);
     }

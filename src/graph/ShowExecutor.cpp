@@ -67,6 +67,9 @@ void ShowExecutor::execute() {
         case ShowSentence::ShowType::kShowCreateEdge:
             showCreateEdge();
             break;
+        case ShowSentence::ShowType::kShowMetric:
+            showMetric();
+            break;
         case ShowSentence::ShowType::kUnknown:
             onError_(Status::Error("Type unknown"));
             break;
@@ -580,6 +583,8 @@ void ShowExecutor::showCreateEdge() {
     std::move(future).via(runner).thenValue(cb).thenError(error);
 }
 
+void ShowExecutor::showMetric() {
+}
 
 void ShowExecutor::setupResponse(cpp2::ExecutionResponse &resp) {
     resp = std::move(*resp_);

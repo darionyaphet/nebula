@@ -32,6 +32,8 @@ std::string ShowSentence::toString() const {
             return folly::stringPrintf("SHOW CREATE TAG %s", name_.get()->c_str());
         case ShowType::kShowCreateEdge:
             return folly::stringPrintf("SHOW CREATE EDGE %s", name_.get()->c_str());
+        case ShowType::kShowMetric:
+            return folly::stringPrintf("SHOW METRIC %s", name_.get()->c_str());
         case ShowType::kUnknown:
         default:
             FLOG_FATAL("Type illegal");

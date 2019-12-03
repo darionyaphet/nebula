@@ -1491,5 +1491,28 @@ Status MetaClient::refreshCache() {
     return ret ? Status::OK() : Status::Error("Load data failed");
 }
 
+folly::Future<StatusOr<std::unordered_map<std::string, MetricValue>>>
+MetaClient::getMetric(const std::string& name) {
+    LOG(INFO) << "Metric: " << name;
+    cpp2::ListHostsReq req;
+    folly::Promise<StatusOr<std::unordered_map<std::string, MetricValue>>> promise;
+    auto future = promise.getFuture();
+    getResponse(std::move(req), [] (auto client, auto request) {
+                    return client->future_listHosts(request);
+                }, [] (cpp2::ListHostsResp&& resp) -> decltype(auto) {
+                       std::unordered_map<std::string, MetricValue> result;
+                       for (auto item : resp.hosts) {
+                           auto ip = item.get_hostAddr().get_ip();
+                           auto port = item.get_hostAddr().get_port();
+                           auto host = network::NetworkUtils::intToIPv4(ip);
+                           static const char *tmp = "http://%s:%d";
+                           auto url = folly::stringPrintf(tmp, host, port);
+                           LOG(INFO) << "URL: " << url;
+                       }
+                       return result;
+                }, std::move(promise));
+    return future;
+}
+
 }  // namespace meta
 }  // namespace nebula

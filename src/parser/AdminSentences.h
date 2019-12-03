@@ -31,7 +31,8 @@ public:
         kShowRoles,
         kShowCreateSpace,
         kShowCreateTag,
-        kShowCreateEdge
+        kShowCreateEdge,
+        kShowMetric,
     };
 
     explicit ShowSentence(ShowType sType) {

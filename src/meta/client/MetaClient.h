@@ -59,6 +59,8 @@ using SpaceEdgeTypeNameMap = std::unordered_map<std::pair<GraphSpaceID, EdgeType
 // get all edgeType edgeName via spaceId
 using SpaceAllEdgeMap = std::unordered_map<GraphSpaceID, std::vector<std::string>>;
 
+using MetricValue = std::tuple<std::string, std::string, std::string>;
+
 struct ConfigItem {
     ConfigItem() {}
 
@@ -357,6 +359,9 @@ protected:
 
     PartsMap doGetPartsMap(const HostAddr& host,
                            const LocalCache& localCache);
+
+    folly::Future<StatusOr<std::unordered_map<std::string, MetricValue>>>
+    getMetric(const std::string& name);
 
 private:
     std::shared_ptr<folly::IOThreadPoolExecutor> ioThreadPool_;
