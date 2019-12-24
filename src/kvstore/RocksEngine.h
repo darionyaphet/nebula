@@ -19,23 +19,36 @@ namespace kvstore {
 
 class RocksRangeIter : public KVIterator {
 public:
-    RocksRangeIter(rocksdb::Iterator* iter, rocksdb::Slice start, rocksdb::Slice end)
+    RocksRangeIter(rocksdb::Iterator* iter, rocksdb::Slice start,
+                   rocksdb::Slice end, rocksdb::Slice cursor, int32_t limit)
         : iter_(iter)
         , start_(start)
-        , end_(end) {}
+        , end_(end)
+        , cursor_(cursor)
+        , limit_(limit) {}
 
     ~RocksRangeIter()  = default;
 
+    void seek() override {
+        if (!cursor_.empty()) {
+            iter_->Seek(cursor_);
+        }
+    }
+
     bool valid() const override {
-        return !!iter_ && iter_->Valid() && (iter_->key().compare(end_) < 0);
+        return !!iter_ && iter_->Valid() &&
+               (iter_->key().compare(end_) < 0) &&
+               (limit_ == -1 || counter_ <= limit_);
     }
 
     void next() override {
         iter_->Next();
+        ++counter_;
     }
 
     void prev() override {
         iter_->Prev();
+        --counter_;
     }
 
     folly::StringPiece key() const override {
@@ -50,27 +63,43 @@ private:
     std::unique_ptr<rocksdb::Iterator> iter_;
     rocksdb::Slice start_;
     rocksdb::Slice end_;
+    rocksdb::Slice cursor_;
+    int32_t counter_{0};
+    int32_t limit_;
 };
 
 
 class RocksPrefixIter : public KVIterator {
 public:
-    RocksPrefixIter(rocksdb::Iterator* iter, rocksdb::Slice prefix)
+    RocksPrefixIter(rocksdb::Iterator* iter, rocksdb::Slice prefix,
+                    rocksdb::Slice cursor, int32_t limit)
         : iter_(iter)
-        , prefix_(prefix) {}
+        , prefix_(prefix)
+        , cursor_(cursor)
+        , limit_(limit) {}
 
     ~RocksPrefixIter()  = default;
 
+    void seek() override {
+        if (!cursor_.empty()) {
+            iter_->Seek(cursor_);
+        }
+    }
+
     bool valid() const override {
-        return !!iter_ && iter_->Valid() && (iter_->key().starts_with(prefix_));
+        return !!iter_ && iter_->Valid() &&
+               (iter_->key().starts_with(prefix_)) &&
+               (limit_ == -1 || counter_ <= limit_);
     }
 
     void next() override {
         iter_->Next();
+        ++counter_;
     }
 
     void prev() override {
         iter_->Prev();
+        --counter_;
     }
 
     folly::StringPiece key() const override {
@@ -84,6 +113,9 @@ public:
 private:
     std::unique_ptr<rocksdb::Iterator> iter_;
     rocksdb::Slice prefix_;
+    rocksdb::Slice cursor_;
+    int32_t counter_{0};
+    int32_t limit_;
 };
 
 
@@ -122,10 +154,14 @@ public:
 
     ResultCode range(const std::string& start,
                      const std::string& end,
-                     std::unique_ptr<KVIterator>* iter) override;
+                     std::unique_ptr<KVIterator>* iter,
+                     const std::string& cursor = "",
+                     int32_t limit = -1) override;
 
     ResultCode prefix(const std::string& prefix,
-                      std::unique_ptr<KVIterator>* iter) override;
+                      std::unique_ptr<KVIterator>* iter,
+                      const std::string& cursor = "",
+                      int32_t limit = -1) override;
 
     /*********************
      * Data modification

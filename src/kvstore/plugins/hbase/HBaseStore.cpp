@@ -154,7 +154,9 @@ std::vector<KV> HBaseStore::decode(GraphSpaceID spaceId,
 ResultCode HBaseStore::range(GraphSpaceID spaceId,
                              const std::string& start,
                              const std::string& end,
-                             std::unique_ptr<KVIterator>* storageIter) {
+                             std::unique_ptr<KVIterator>* storageIter,
+                             const std::string&,
+                             int32_t) {
     auto tableName = this->spaceIdToTableName(spaceId);
     std::vector<std::pair<std::string, KVMap>> dataList;
     auto startRowKey = this->getRowKey(start);
@@ -180,7 +182,9 @@ ResultCode HBaseStore::range(GraphSpaceID spaceId,
 
 ResultCode HBaseStore::prefix(GraphSpaceID spaceId,
                               const std::string& prefix,
-                              std::unique_ptr<KVIterator>* storageIter) {
+                              std::unique_ptr<KVIterator>* storageIter,
+                              const std::string&,
+                              int32_t) {
     auto tableName = this->spaceIdToTableName(spaceId);
     std::string startRowKey, endRowKey;
     startRowKey.reserve(kMaxRowKeyLength);
@@ -260,20 +264,22 @@ ResultCode HBaseStore::multiGet(GraphSpaceID spaceId,
 
 
 ResultCode HBaseStore::range(GraphSpaceID spaceId,
-                             PartitionID partId,
+                             PartitionID,
                              const std::string& start,
                              const std::string& end,
-                             std::unique_ptr<KVIterator>* iter) {
-    UNUSED(partId);
+                             std::unique_ptr<KVIterator>* iter,
+                             const std::string&,
+                             int32_t) {
     return this->range(spaceId, start, end, iter);
 }
 
 
 ResultCode HBaseStore::prefix(GraphSpaceID spaceId,
-                              PartitionID partId,
+                              PartitionID,
                               const std::string& prefix,
-                              std::unique_ptr<KVIterator>* iter) {
-    UNUSED(partId);
+                              std::unique_ptr<KVIterator>* iter,
+                              const std::string&,
+                              int32_t) {
     return this->prefix(spaceId, prefix, iter);
 }
 
@@ -329,11 +335,10 @@ void HBaseStore::asyncMultiRemove(GraphSpaceID spaceId,
 
 
 void HBaseStore::asyncRemoveRange(GraphSpaceID spaceId,
-                                  PartitionID partId,
+                                  PartitionID,
                                   const std::string& start,
                                   const std::string& end,
                                   KVCallback cb) {
-    UNUSED(partId);
     auto removeRange = [this, &spaceId, &start, &end] () -> ResultCode {
         std::unique_ptr<kvstore::KVIterator> iter;
         ResultCode rangeCode = this->range(spaceId, start, end, &iter);
@@ -358,10 +363,9 @@ void HBaseStore::asyncRemoveRange(GraphSpaceID spaceId,
 
 
 void HBaseStore::asyncRemovePrefix(GraphSpaceID spaceId,
-                                   PartitionID partId,
+                                   PartitionID,
                                    const std::string& prefix,
                                    KVCallback cb) {
-    UNUSED(partId);
     auto removePrefix = [this, &spaceId, &prefix] () -> ResultCode {
         std::unique_ptr<kvstore::KVIterator> iter;
         ResultCode prefixCode = this->prefix(spaceId, prefix, &iter);

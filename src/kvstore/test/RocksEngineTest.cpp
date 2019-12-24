@@ -112,6 +112,48 @@ TEST(RocksEngineTest, PrefixTest) {
     checkPrefix("c", 20, 20);
 }
 
+TEST(RocksEngineTest, PrefixWithPagingTest) {
+    fs::TempDir rootPath("/tmp/rocksdb_engine_PrefixWithPagingTest.XXXXXX");
+    auto engine = std::make_unique<RocksEngine>(0, rootPath.path());
+    LOG(INFO) << "Write data in batch and scan them...";
+    std::vector<KV> data;
+    for (int32_t i = 0; i < 10;  i++) {
+        data.emplace_back(folly::stringPrintf("a_%d", i),
+                          folly::stringPrintf("val_%d", i));
+    }
+    for (int32_t i = 10; i < 15;  i++) {
+        data.emplace_back(folly::stringPrintf("b_%d", i),
+                          folly::stringPrintf("val_%d", i));
+    }
+    for (int32_t i = 20; i < 40;  i++) {
+        data.emplace_back(folly::stringPrintf("c_%d", i),
+                          folly::stringPrintf("val_%d", i));
+    }
+    EXPECT_EQ(ResultCode::SUCCEEDED, engine->multiPut(std::move(data)));
+
+    auto checkPrefix = [&](const std::string& prefix,
+                           int32_t expectedFrom,
+                           int32_t expectedTotal) {
+        VLOG(1) << "prefix " << prefix
+                << ", expectedFrom " << expectedFrom
+                << ", expectedTotal " << expectedTotal;
+
+        std::unique_ptr<KVIterator> iter;
+        EXPECT_EQ(ResultCode::SUCCEEDED, engine->prefix(prefix, &iter, "a_5"));
+        int num = 0;
+        while (iter->valid()) {
+            num++;
+            auto key = iter->key();
+            auto val = iter->val();
+            EXPECT_EQ(folly::stringPrintf("%s_%d", prefix.c_str(), expectedFrom), key);
+            EXPECT_EQ(folly::stringPrintf("val_%d", expectedFrom), val);
+            expectedFrom++;
+            iter->next();
+        }
+        EXPECT_EQ(expectedTotal, num);
+    };
+    checkPrefix("a", 5, 5);
+}
 
 TEST(RocksEngineTest, RemoveTest) {
     fs::TempDir rootPath("/tmp/rocksdb_engine_RemoveTest.XXXXXX");

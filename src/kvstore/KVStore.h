@@ -82,12 +82,15 @@ public:
                                 PartitionID partId,
                                 const std::vector<std::string>& keys,
                                 std::vector<std::string>* values) = 0;
+
     // Get all results in range [start, end)
     virtual ResultCode range(GraphSpaceID spaceId,
                              PartitionID  partId,
                              const std::string& start,
                              const std::string& end,
-                             std::unique_ptr<KVIterator>* iter) = 0;
+                             std::unique_ptr<KVIterator>* iter,
+                             const std::string& cursor = "",
+                             int32_t limit = -1) = 0;
 
     // Since the `range' interface will hold references to its 3rd & 4th parameter, in `iter',
     // thus the arguments must outlive `iter'.
@@ -96,19 +99,25 @@ public:
                              PartitionID  partId,
                              std::string&& start,
                              std::string&& end,
-                             std::unique_ptr<KVIterator>* iter) = delete;
+                             std::unique_ptr<KVIterator>* iter,
+                             std::string&& cursor = "",
+                             int32_t limit = -1) = delete;
 
     // Get all results with prefix.
     virtual ResultCode prefix(GraphSpaceID spaceId,
                               PartitionID  partId,
                               const std::string& prefix,
-                              std::unique_ptr<KVIterator>* iter) = 0;
+                              std::unique_ptr<KVIterator>* iter,
+                              const std::string& cursor = "",
+                              int32_t limit = -1) = 0;
 
     // To forbid to pass rvalue via the `prefix' parameter.
     virtual ResultCode prefix(GraphSpaceID spaceId,
                               PartitionID  partId,
                               std::string&& prefix,
-                              std::unique_ptr<KVIterator>* iter) = delete;
+                              std::unique_ptr<KVIterator>* iter,
+                              std::string&& cursor = "",
+                              int32_t limit = -1) = delete;
 
     virtual void asyncMultiPut(GraphSpaceID spaceId,
                                PartitionID  partId,

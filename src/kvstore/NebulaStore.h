@@ -110,13 +110,17 @@ public:
                      PartitionID  partId,
                      const std::string& start,
                      const std::string& end,
-                     std::unique_ptr<KVIterator>* iter) override;
+                     std::unique_ptr<KVIterator>* iter,
+                     const std::string& cursor = "",
+                     int32_t limit = -1) override;
 
     // Get all results with prefix.
     ResultCode prefix(GraphSpaceID spaceId,
                       PartitionID  partId,
                       const std::string& prefix,
-                      std::unique_ptr<KVIterator>* iter) override;
+                      std::unique_ptr<KVIterator>* iter,
+                      const std::string& cursor = "",
+                      int32_t limit = -1) override;
 
     // async batch put.
     void asyncMultiPut(GraphSpaceID spaceId,

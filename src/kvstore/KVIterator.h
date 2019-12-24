@@ -16,6 +16,8 @@ class KVIterator {
 public:
     virtual ~KVIterator()  = default;
 
+    virtual void seek() = 0;
+
     virtual bool valid() const = 0;
 
     virtual void next() = 0;
