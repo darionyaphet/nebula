@@ -16,11 +16,7 @@ void SendBlockSignProcessor::process(const cpp2::BlockingSignRequest& req) {
     auto spaceId = req.get_space_id();
     auto sign = req.get_sign() == cpp2::EngineSignType::BLOCK_ON;
     auto code = kvstore_->setWriteBlocking(spaceId, sign);
-    if (code != kvstore::ResultCode::SUCCEEDED) {
-        cpp2::ResultCode thriftRet;
-        thriftRet.set_code(to(code));
-        codes_.emplace_back(std::move(thriftRet));
-    }
+    this->pushResultCode(code);
     onFinished();
 }
 

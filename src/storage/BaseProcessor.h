@@ -98,6 +98,14 @@ protected:
 
     cpp2::ErrorCode to(kvstore::ResultCode code);
 
+    void pushResultCode(kvstore::ResultCode code) {
+        if (code != nebula::kvstore::ResultCode::SUCCEEDED) {
+            cpp2::ResultCode thriftRet;
+            thriftRet.set_code(to(code));
+            codes_.emplace_back(std::move(thriftRet));
+        }
+    }
+
     void pushResultCode(cpp2::ErrorCode code, PartitionID partId) {
         if (code != cpp2::ErrorCode::SUCCEEDED) {
             cpp2::ResultCode thriftRet;
