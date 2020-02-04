@@ -115,7 +115,7 @@ StatusOr<std::vector<storage::cpp2::Vertex>> InsertVertexExecutor::prepareVertic
     std::shared_ptr<TagVertexCache> cache = std::make_shared<TagVertexCache>();
     std::vector<storage::cpp2::Vertex> vertices(rows_.size());
     Getters getters;
-    for (auto i = rows_.size() - 1; i >=0 ; i--) {
+    for (int32_t i = rows_.size() - 1; i >= 0 ; i--) {
         auto *row = rows_[i];
         auto rid = row->id();
         rid->setContext(expCtx_.get());
@@ -160,7 +160,7 @@ StatusOr<std::vector<storage::cpp2::Vertex>> InsertVertexExecutor::prepareVertic
             auto tagId = tagIds_[index];
 
             auto cacheKey = std::make_pair(tagId, id);
-            auto cacheIter = cache->find(cacheKey)
+            auto cacheIter = cache->find(cacheKey);
             if (cacheIter == cache->end()) {
                 cache->emplace(std::move(cacheKey));
             } else {

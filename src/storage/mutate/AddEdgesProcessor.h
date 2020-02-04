@@ -37,13 +37,13 @@ private:
     std::string addEdges(int64_t version, PartitionID partId,
                          const std::vector<cpp2::Edge>& edges);
 
-    std::string findObsoleteIndex(PartitionID partId,
-                                  const folly::StringPiece& rawKey);
+    StatusOr<std::string> findOriginalValue(PartitionID partId,
+                                            const folly::StringPiece& rawKey);
 
-    std::string indexKey(PartitionID partId,
-                         RowReader* reader,
-                         const folly::StringPiece& rawKey,
-                         std::shared_ptr<nebula::cpp2::IndexItem> index);
+    std::string makeIndexKey(PartitionID partId,
+                             RowReader* reader,
+                             const folly::StringPiece& rawKey,
+                             std::shared_ptr<nebula::cpp2::IndexItem> index);
 
 private:
     GraphSpaceID                                          spaceId_;

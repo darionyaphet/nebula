@@ -30,12 +30,29 @@ TEST(IndexTest, InsertVerticesTest) {
     cpp2::AddVerticesRequest req;
     req.space_id = 0;
     req.overwritable = true;
-    for (auto partId = 1; partId <= 3; partId++) {
-        auto vertices = TestUtils::setupVertices(partId,
-                                                 partId * 10,
-                                                 10 * (partId + 1),
-                                                 3001,
-                                                 3010);
+    for (auto partId = 0; partId < 3; partId++) {
+        std::vector<cpp2::Vertex> vertices;
+        for (auto vertexId = partId * 10; vertexId < 10 * (partId + 1); vertexId++) {
+            std::vector<cpp2::Tag> tags;
+            for (auto tagId = 3001; tagId < 3010; tagId++) {
+                RowWriter writer;
+                for (int64_t numInt = 0; numInt < 3; numInt++) {
+                    writer << numInt;
+                }
+                for (auto numString = 3; numString < 6; numString++) {
+                    writer << folly::stringPrintf("tag_string_col_%d", numString);
+                }
+                auto val = writer.encode();
+                cpp2::Tag tag;
+                tag.set_tag_id(tagId);
+                tag.set_props(std::move(val));
+                tags.emplace_back(std::move(tag));
+            }
+            cpp2::Vertex vertex;
+            vertex.set_id(vertexId);
+            vertex.set_tags(std::move(tags));
+            vertices.emplace_back(std::move(vertex));
+        }
         req.parts.emplace(partId, std::move(vertices));
     }
     auto* processor = AddVerticesProcessor::instance(kv.get(),
@@ -169,13 +186,8 @@ TEST(IndexTest, DeleteVertexTest) {
         cpp2::AddVerticesRequest req;
         req.space_id = 0;
         req.overwritable = true;
-        PartitionID partId = 1;
-        VertextID =
-        auto vertices = TestUtils::setupVertices(partId,
-                                                 10,
-                                                 10 + 1),
-                                                 3001,
-                                                 3010);
+        {
+            std::vector<cpp2::Vertex> vertices;
             std::vector<cpp2::Tag> tags;
             for (auto tagId = 3001; tagId < 3010; tagId++) {
                 RowWriter writer;
@@ -567,53 +579,6 @@ TEST(IndexTest, UpdateEdgeTest) {
         EXPECT_EQ(8, oldHint);
         EXPECT_EQ(1, newHint);
     }
-}
-
-TEST(IndexTest, RebuildTagIndexTest) {
-    fs::TempDir rootPath("/tmp/RebuildTagIndexTest.XXXXXX");
-    std::unique_ptr<kvstore::KVStore> kv = TestUtils::initKV(rootPath.path());
-    auto schemaMan = TestUtils::mockSchemaMan();
-    auto indexMan = TestUtils::mockIndexMan();
-
-    cpp2::AddVerticesRequest req;
-    req.space_id = 0;
-    req.overwritable = true;
-    for (auto partId = 0; partId < 3; partId++) {
-        std::vector<cpp2::Vertex> vertices;
-        for (auto vertexId = partId * 10; vertexId < 10 * (partId + 1); vertexId++) {
-            std::vector<cpp2::Tag> tags;
-            for (auto tagId = 3001; tagId < 3010; tagId++) {
-                RowWriter writer;
-                for (int64_t numInt = 0; numInt < 3; numInt++) {
-                    writer << numInt;
-                }
-                for (auto numString = 3; numString < 6; numString++) {
-                    writer << folly::stringPrintf("tag_string_col_%d", numString);
-                }
-                auto val = writer.encode();
-                cpp2::Tag tag;
-                tag.set_tag_id(tagId);
-                tag.set_props(std::move(val));
-                tags.emplace_back(std::move(tag));
-            }
-            cpp2::Vertex vertex;
-            vertex.set_id(vertexId);
-            vertex.set_tags(std::move(tags));
-            vertices.emplace_back(std::move(vertex));
-        }
-        req.parts.emplace(partId, std::move(vertices));
-    }
-    auto* processor = AddVerticesProcessor::instance(kv.get(),
-                                                     schemaMan.get(),
-                                                     indexMan.get(),
-                                                     nullptr);
-    auto fut = processor->getFuture();
-    processor->process(req);
-    auto resp = std::move(fut).get();
-    EXPECT_EQ(0, resp.result.failed_codes.size());
-}
-
-TEST(IndexTest, RebuildEdgeIndexTest) {
 }
 
 }  // namespace storage

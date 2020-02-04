@@ -3,6 +3,7 @@
  * This source code is licensed under Apache 2.0 License,
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
+
 #include "storage/mutate/AddEdgesProcessor.h"
 #include "base/NebulaKeyUtils.h"
 #include <algorithm>
@@ -20,17 +21,18 @@ void AddEdgesProcessor::process(const cpp2::AddEdgesRequest& req) {
     // Switch version to big-endian, make sure the key is in ordered.
     version = folly::Endian::big(version);
 
-    callingNum_ = req.parts.size();
+    callingNum_ = req.get_parts().size();
     auto iRet = indexMan_->getEdgeIndexes(spaceId_);
     if (iRet.ok()) {
         indexes_ = iRet.value();
     }
 
-    std::for_each(req.parts.begin(), req.parts.end(), [&](auto& partEdges) {
+    std::for_each(req.get_parts().begin(), req.get_parts().end(), [&](auto& partEdges) {
         auto partId = partEdges.first;
         const auto &edges = partEdges.second;
 
         if (indexes_.empty()) {
+            std::vector<kvstore::KV> data;
             std::for_each(edges.begin(), edges.end(), [&](auto& edge) {
                 VLOG(3) << "PartitionID: " << partId << ", VertexID: " << edge.key.src
                         << ", EdgeType: " << edge.key.edge_type
@@ -42,7 +44,7 @@ void AddEdgesProcessor::process(const cpp2::AddEdgesRequest& req) {
                 data.emplace_back(std::move(key), std::move(edge.get_props()));
             });
         } else {
-            auto atomic = [&]() -> std::string {
+            auto atomic = [version, partId, edges = std::move(edges), this]() -> std::string {
                 return addEdges(version, partId, edges);
             };
             auto callback = [partId, this](kvstore::ResultCode code) {
@@ -51,42 +53,12 @@ void AddEdgesProcessor::process(const cpp2::AddEdgesRequest& req) {
             this->kvstore_->asyncAtomicOp(spaceId_, partId, atomic, callback);
         }
     });
-
-    if (indexes_.empty()) {
-        std::for_each(req.parts.begin(), req.parts.end(), [&](auto& partEdges){
-            auto partId = partEdges.first;
-            std::vector<kvstore::KV> data;
-            std::for_each(partEdges.second.begin(), partEdges.second.end(), [&](auto& edge){
-                VLOG(3) << "PartitionID: " << partId << ", VertexID: " << edge.key.src
-                        << ", EdgeType: " << edge.key.edge_type << ", EdgeRanking: "
-                        << edge.key.ranking << ", VertexID: "
-                        << edge.key.dst << ", EdgeVersion: " << version;
-                auto key = NebulaKeyUtils::edgeKey(partId, edge.key.src, edge.key.edge_type,
-                                                   edge.key.ranking, edge.key.dst, version);
-                data.emplace_back(std::move(key), std::move(edge.get_props()));
-            });
-            doPut(spaceId_, partId, std::move(data));
-        });
-    } else {
-        std::for_each(req.parts.begin(), req.parts.end(), [&](auto& partEdges){
-            auto partId = partEdges.first;
-            const auto &edges = partEdges.second;
-            // auto atomic = [&]() -> std::string {
-            //     return addEdges(version, partId, edges);
-            // };
-            // auto callback = [partId, this](kvstore::ResultCode code) {
-            //     handleAsync(spaceId_, partId, code);
-            // };
-            // this->kvstore_->asyncAtomicOp(spaceId_, partId, atomic, callback);
-        });
-    }
 }
 
 std::string AddEdgesProcessor::addEdges(int64_t version, PartitionID partId,
                                         const std::vector<cpp2::Edge>& edges) {
     std::unique_ptr<kvstore::BatchHolder> batchHolder = std::make_unique<kvstore::BatchHolder>();
 
-    // std::map<std::string, std::string> newEdges;
     std::for_each(edges.begin(), edges.end(), [&](auto& edge) {
         auto prop = edge.get_props();
         auto type = edge.key.edge_type;
@@ -97,90 +69,45 @@ std::string AddEdgesProcessor::addEdges(int64_t version, PartitionID partId,
                 << ", EdgeType: " << type << ", EdgeRanking: " << rank
                 << ", VertexID: " << dstId << ", EdgeVersion: " << version;
         auto key = NebulaKeyUtils::edgeKey(partId, srcId, type, rank, dstId, version);
-        // newEdges[key] = std::move(prop);
-        std::unique_ptr<RowReader> nReader;
-        auto edgeType = NebulaKeyUtils::getEdgeType(e.first);
-        for (auto& index : indexes_) {
-            if (edgeType == index->get_schema_id().get_edge_type()) {
-                /*
-                 * step 1 , Delete old version index if exists.
-                 */
-                if (val.empty() && !FLAGS_ignore_index_check_pre_insert) {
-                    val = findObsoleteIndex(partId, e.first);
-                }
-                if (!val.empty()) {
-                    auto reader = RowReader::getEdgePropReader(this->schemaMan_,
-                                                               val,
-                                                               spaceId_,
-                                                               edgeType);
-                    auto oi = indexKey(partId, reader.get(), e.first, index);
-                    if (!oi.empty()) {
-                        batchHolder->remove(std::move(oi));
+
+        auto newReader = RowReader::getEdgePropReader(this->schemaMan_,
+                                                      prop,
+                                                      spaceId_,
+                                                      type);
+        bool updated = false;
+        if (!FLAGS_ignore_index_check_pre_insert) {
+            auto original = findOriginalValue(partId, key);
+            if (original.ok()) {
+                auto originalReader = RowReader::getEdgePropReader(this->schemaMan_,
+                                                                   original.value(),
+                                                                   spaceId_,
+                                                                   type);
+                for (auto& index : indexes_) {
+                    auto originalIndexKey = makeIndexKey(partId, originalReader.get(), original.value(), index);
+                    auto newIndexKey = makeIndexKey(partId, newReader.get(), prop, index);
+                    if (!originalIndexKey.empty() &&
+                        originalIndexKey != newIndexKey) {
+                        batchHolder->remove(std::move(originalIndexKey));
+                        batchHolder->put(std::move(newIndexKey), "");
                     }
                 }
-                /*
-                 * step 2 , Insert new edge index
-                 */
-                if (nReader == nullptr) {
-                    nReader = RowReader::getEdgePropReader(this->schemaMan_,
-                                                           e.second,
-                                                           spaceId_,
-                                                           edgeType);
-                }
-                auto ni = indexKey(partId, nReader.get(), e.first, index);
-                batchHolder->put(std::move(ni), "");
+                updated = true;
             }
         }
-        
-    });
-    for (auto& e : newEdges) {
-        std::string val;
-        
-        
-        // for (auto& index : indexes_) {
-        //     if (edgeType == index->get_schema_id().get_edge_type()) {
-        //         /*
-        //          * step 1 , Delete old version index if exists.
-        //          */
-        //         if (val.empty() && !FLAGS_ignore_index_check_pre_insert) {
-        //             val = findObsoleteIndex(partId, e.first);
-        //         }
-        //         if (!val.empty()) {
-        //             auto reader = RowReader::getEdgePropReader(this->schemaMan_,
-        //                                                        val,
-        //                                                        spaceId_,
-        //                                                        edgeType);
-        //             auto oi = indexKey(partId, reader.get(), e.first, index);
-        //             if (!oi.empty()) {
-        //                 batchHolder->remove(std::move(oi));
-        //             }
-        //         }
-        //         /*
-        //          * step 2 , Insert new edge index
-        //          */
-        //         if (nReader == nullptr) {
-        //             nReader = RowReader::getEdgePropReader(this->schemaMan_,
-        //                                                    e.second,
-        //                                                    spaceId_,
-        //                                                    edgeType);
-        //         }
-        //         auto ni = indexKey(partId, nReader.get(), e.first, index);
-        //         batchHolder->put(std::move(ni), "");
-        //     }
-        // }
-        /*
-         * step 3 , Insert new vertex data
-         */
-        auto key = e.first;
-        auto prop = e.second;
-        batchHolder->put(std::move(key), std::move(prop));
-    }
 
+        if (!updated) {
+            for (auto& index : indexes_) {
+                auto newIndexKey = makeIndexKey(partId, newReader.get(), prop, index);
+                batchHolder->put(std::move(newIndexKey), "");
+            }
+        }
+        batchHolder->put(std::move(key), std::move(prop));
+    });
     return encodeBatchValue(batchHolder->getBatch());
 }
 
-std::string AddEdgesProcessor::findObsoleteIndex(PartitionID partId,
-                                                 const folly::StringPiece& rawKey) {
+StatusOr<std::string> AddEdgesProcessor::findOriginalValue(PartitionID partId,
+                                                           const folly::StringPiece& rawKey) {
     auto prefix = NebulaKeyUtils::edgePrefix(partId,
                                              NebulaKeyUtils::getSrcId(rawKey),
                                              NebulaKeyUtils::getEdgeType(rawKey),
@@ -191,18 +118,18 @@ std::string AddEdgesProcessor::findObsoleteIndex(PartitionID partId,
     if (ret != kvstore::ResultCode::SUCCEEDED) {
         LOG(ERROR) << "Error! ret = " << static_cast<int32_t>(ret)
                    << ", spaceId " << this->spaceId_;
-        return "";
+        return Status::EdgeNotFound();
     }
     if (iter && iter->valid()) {
         return iter->val().str();
     }
-    return "";
+    return Status::EdgeNotFound();
 }
 
-std::string AddEdgesProcessor::indexKey(PartitionID partId,
-                                        RowReader* reader,
-                                        const folly::StringPiece& rawKey,
-                                        std::shared_ptr<nebula::cpp2::IndexItem> index) {
+std::string AddEdgesProcessor::makeIndexKey(PartitionID partId,
+                                            RowReader* reader,
+                                            const folly::StringPiece& rawKey,
+                                            std::shared_ptr<nebula::cpp2::IndexItem> index) {
     auto values = collectIndexValues(reader, index->get_fields());
     return NebulaKeyUtils::edgeIndexKey(partId,
                                         index->get_index_id(),

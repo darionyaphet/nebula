@@ -17,49 +17,48 @@ namespace storage {
 
 void AddVerticesProcessor::process(const cpp2::AddVerticesRequest& req) {
     CHECK_NOTNULL(kvstore_);
+    spaceId_ = req.get_space_id();
     auto version =
         std::numeric_limits<int64_t>::max() - time::WallClock::fastNowInMicroSec();
     // Switch version to big-endian, make sure the key is in ordered.
     version = folly::Endian::big(version);
 
-    const auto& partVertices = req.get_parts();
-    spaceId_ = req.get_space_id();
-    callingNum_ = partVertices.size();
+    callingNum_ = req.get_parts().size();
     auto iRet = indexMan_->getTagIndexes(spaceId_);
     if (iRet.ok()) {
         indexes_ = iRet.value();
     }
 
-    std::for_each(partVertices.begin(), partVertices.end(), [&](auto& pv) {
-        auto partId = pv.first;
-        const auto& vertices = pv.second;
+    std::for_each(req.get_parts().begin(), req.get_parts().end(), [&](auto& partVertices) {
+        auto part = partVertices.first;
+        const auto& vertices = partVertices.second;
 
         if (indexes_.empty()) {
             std::vector<kvstore::KV> data;
             std::for_each(vertices.begin(), vertices.end(), [&](auto& v) {
                 const auto& tags = v.get_tags();
                 std::for_each(tags.begin(), tags.end(), [&](auto& tag) {
-                    VLOG(3) << "PartitionID: " << partId << ", VertexID: " << v.get_id()
+                    VLOG(3) << "PartitionID: " << part << ", VertexID: " << v.get_id()
                             << ", TagID: " << tag.get_tag_id() << ", TagVersion: " << version;
-                    auto key = NebulaKeyUtils::vertexKey(partId, v.get_id(),
+                    auto key = NebulaKeyUtils::vertexKey(part, v.get_id(),
                                                          tag.get_tag_id(), version);
                     data.emplace_back(std::move(key), std::move(tag.get_props()));
                     if (FLAGS_enable_vertex_cache && vertexCache_ != nullptr) {
-                        vertexCache_->evict(std::make_pair(v.get_id(), tag.get_tag_id()), partId);
+                        vertexCache_->evict(std::make_pair(v.get_id(), tag.get_tag_id()), part);
                         VLOG(3) << "Evict cache for vId " << v.get_id()
                                 << ", tagId " << tag.get_tag_id();
                     }
                 });
             });
-            doPut(spaceId_, partId, std::move(data));
+            doPut(spaceId_, part, std::move(data));
         } else {
-            auto atomic = [&]() -> std::string {
-                return addVertices(version, partId, vertices);
+            auto atomic = [version, part, vertices = std::move(vertices), this]() -> std::string {
+                return addVertices(version, part, vertices);
             };
-            auto callback = [partId, this](kvstore::ResultCode code) {
-                handleAsync(spaceId_, partId, code);
+            auto callback = [part, this](kvstore::ResultCode code) {
+                handleAsync(spaceId_, part, code);
             };
-            this->kvstore_->asyncAtomicOp(spaceId_, partId, atomic, callback);
+            this->kvstore_->asyncAtomicOp(spaceId_, part, atomic, callback);
         }
     });
 }
@@ -77,55 +76,45 @@ std::string AddVerticesProcessor::addVertices(int64_t version, PartitionID partI
                     << ", TagID: " << tagId << ", TagVersion: " << version;
 
             auto key = NebulaKeyUtils::vertexKey(partId, vId, tagId, version);
-            batchHolder->put(std::move(key), std::move(prop));
+            
             if (FLAGS_enable_vertex_cache && this->vertexCache_ != nullptr) {
                 this->vertexCache_->evict(std::make_pair(vId, tagId), partId);
                 VLOG(3) << "Evict cache for vId " << vId << ", tagId " << tagId;
             }
 
-            // auto value = findObsoleteIndex(partId, vId, tagId);
-            // std::unique_ptr<RowReader> nReader;
-            auto original = findOriginalValue(partId, vId, tagId);
-            if (original.ok()) {
-                auto originalReader = RowReader::getTagPropReader(this->schemaMan_,
-                                                                  original,
-                                                                  spaceId_,
-                                                                  tagId);
-                auto newReader = RowReader::getTagPropReader(this->schemaMan_,
-                                                             prop,
-                                                             spaceId_,
-                                                             tagId);
-                
+            auto newReader = RowReader::getTagPropReader(this->schemaMan_,
+                                                         prop,
+                                                         spaceId_,
+                                                         tagId);
 
+            bool updated = false;
+            if (!FLAGS_ignore_index_check_pre_insert) {
+                auto original = findOriginalValue(partId, vId, tagId);
+                if (original.ok()) {
+                    auto originalReader = RowReader::getTagPropReader(this->schemaMan_,
+                                                                      original.value(),
+                                                                      spaceId_,
+                                                                      tagId);
+                    for (auto& index : indexes_) {
+                        auto originalIndexKey = makeIndexKey(partId, vId, originalReader.get(), index);
+                        auto newIndexKey = makeIndexKey(partId, vId, newReader.get(), index);
+                        if (!originalIndexKey.empty() &&
+                            originalIndexKey != newIndexKey) {
+                            batchHolder->remove(std::move(originalIndexKey));
+                            batchHolder->put(std::move(newIndexKey), "");
+                        }
+                    }
+                    updated = true;
+                }
+            }
+
+            if (!updated) {
                 for (auto& index : indexes_) {
-                    auto originalIndexKey = makeIndexKey(partId, vId, originalReader.get(), index);
                     auto newIndexKey = makeIndexKey(partId, vId, newReader.get(), index);
-                    if (!originalIndexKey.empty() &&
-                        originalIndexKey != newIndexKey) {
-                        batchHolder->remove(std::move(originalIndexKey));
-                        batchHolder->put(std::move(newIndexKey), "");
-                    }
+                    batchHolder->put(std::move(newIndexKey), "");
                 }
             }
-
-            for (auto& index : indexes_) {
-                
-                auto current = makeCurrentIndexValue();
-                if (!original.empty() && (original != current)) {
-                    auto reader = RowReader::getTagPropReader(this->schemaMan_,
-                                                              original,
-                                                              spaceId_,
-                                                              tagId);
-                    auto oi = makeIndexKey(partId, vId, reader.get(), index);
-                    if (!oi.empty()) {
-                        batchHolder->remove(std::move(oi));
-                    }
-                    
-                    batchHolder->put(std::move(ni), "");
-                }
-
-                batchHolder->put(std::move(key), std::move(prop));
-            }
+            batchHolder->put(std::move(key), std::move(prop));
         });
     });
     return encodeBatchValue(batchHolder->getBatch());
