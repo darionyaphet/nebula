@@ -42,14 +42,14 @@ private:
     std::string addVertices(int64_t version, PartitionID partId,
                             const std::vector<cpp2::Vertex>& vertices);
 
-    std::string findObsoleteIndex(PartitionID partId,
-                                  VertexID vId,
-                                  TagID tagId);
+    StatusOr<std::string> findOriginalValue(PartitionID partId,
+                                            VertexID vId,
+                                            TagID tagId);
 
-    std::string indexKey(PartitionID partId,
-                         VertexID vId,
-                         RowReader* reader,
-                         std::shared_ptr<nebula::cpp2::IndexItem> index);
+    std::string makeIndexKey(PartitionID partId,
+                             VertexID vId,
+                             RowReader* reader,
+                             std::shared_ptr<nebula::cpp2::IndexItem> index);
 
 private:
     GraphSpaceID                                          spaceId_;

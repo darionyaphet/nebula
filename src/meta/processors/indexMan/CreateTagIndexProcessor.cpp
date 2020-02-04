@@ -22,6 +22,31 @@ void CreateTagIndexProcessor::process(const cpp2::CreateTagIndexReq& req) {
         return;
     }
 
+    std::unique_ptr<kvstore::KVIterator> iter;
+    auto checkRet = kvstore_->prefix(kDefaultSpaceId, kDefaultPartId, prefix, &iter);
+    if (ret != kvstore::ResultCode::SUCCEEDED) {
+        resp_.set_code(to(ret));
+        onFinished();
+        return;
+    }
+
+    while (iter->valid()) {
+        auto val = iter->val();
+        auto item = MetaServiceUtils::parseIndex(val);
+        for (int32_t i = 0; i < fieldNames.size(); i++) {
+            if (fieldNames[i] != item.get_fields()[i].get_name()) {
+                break;
+            }
+
+            if (i == fieldNames.size() - 1) {
+                resp_.set_code(cpp2::ErrorCode::E_EXISTED);
+                onFinished();
+                return;
+            }
+        }
+        iter->next();
+    }
+
     folly::SharedMutex::WriteHolder wHolder(LockUtils::tagIndexLock());
     auto ret = getIndexID(space, indexName);
     if (ret.ok()) {

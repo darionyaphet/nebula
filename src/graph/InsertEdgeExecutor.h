@@ -13,6 +13,8 @@
 namespace nebula {
 namespace graph {
 
+using EdgeTypeCache = std::unordered_set<std::tuple<EdgeType, VertexID, VertexID>>;
+
 class InsertEdgeExecutor final : public Executor {
 public:
     InsertEdgeExecutor(Sentence *sentence, ExecutionContext *ectx);

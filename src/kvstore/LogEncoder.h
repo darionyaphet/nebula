@@ -30,6 +30,7 @@ enum BatchLogType : char {
     OP_BATCH_PUT            = 0x1,
     OP_BATCH_REMOVE         = 0x2,
     OP_BATCH_REMOVE_RANGE   = 0x3,
+    OP_BATCH_SINGLE_REMOVE  = 0x4,
 };
 
 std::string encodeKV(const folly::StringPiece& key,
@@ -79,6 +80,11 @@ public:
         batch_.emplace_back(BatchLogType::OP_BATCH_REMOVE_RANGE,
                             std::make_pair(std::forward<std::string>(begin),
                                            std::forward<std::string>(end)));
+    }
+
+    void singleRemove(std::string&& key) {
+        batch_.emplace_back(BatchLogType::OP_BATCH_SINGLE_REMOVE,
+                            std::make_pair(std::forward<std::string>(key), ""));
     }
 
     void clear() {

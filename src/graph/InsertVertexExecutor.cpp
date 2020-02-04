@@ -112,9 +112,10 @@ StatusOr<std::vector<storage::cpp2::Vertex>> InsertVertexExecutor::prepareVertic
     expCtx_->setStorageClient(ectx()->getStorageClient());
     expCtx_->setSpace(spaceId_);
 
+    std::shared_ptr<TagVertexCache> cache = std::make_shared<TagVertexCache>();
     std::vector<storage::cpp2::Vertex> vertices(rows_.size());
     Getters getters;
-    for (auto i = 0u; i < rows_.size(); i++) {
+    for (auto i = rows_.size() - 1; i >=0 ; i--) {
         auto *row = rows_[i];
         auto rid = row->id();
         rid->setContext(expCtx_.get());
@@ -157,6 +158,15 @@ StatusOr<std::vector<storage::cpp2::Vertex>> InsertVertexExecutor::prepareVertic
         for (auto index = 0u; index < tagIds_.size(); index++) {
             auto &tag = tags[index];
             auto tagId = tagIds_[index];
+
+            auto cacheKey = std::make_pair(tagId, id);
+            auto cacheIter = cache->find(cacheKey)
+            if (cacheIter == cache->end()) {
+                cache->emplace(std::move(cacheKey));
+            } else {
+                continue;
+            }
+
             auto props = tagProps_[index];
             auto schema = schemas_[index];
             auto propsPosition = propsPositions_[index];

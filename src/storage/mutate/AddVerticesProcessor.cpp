@@ -16,6 +16,7 @@ namespace nebula {
 namespace storage {
 
 void AddVerticesProcessor::process(const cpp2::AddVerticesRequest& req) {
+    CHECK_NOTNULL(kvstore_);
     auto version =
         std::numeric_limits<int64_t>::max() - time::WallClock::fastNowInMicroSec();
     // Switch version to big-endian, make sure the key is in ordered.
@@ -26,18 +27,16 @@ void AddVerticesProcessor::process(const cpp2::AddVerticesRequest& req) {
     callingNum_ = partVertices.size();
     auto iRet = indexMan_->getTagIndexes(spaceId_);
     if (iRet.ok()) {
-        for (auto& index : iRet.value()) {
-            indexes_.emplace_back(index);
-        }
+        indexes_ = iRet.value();
     }
 
-    CHECK_NOTNULL(kvstore_);
-    if (indexes_.empty()) {
-        std::for_each(partVertices.begin(), partVertices.end(), [&](auto& pv) {
-            auto partId = pv.first;
-            const auto& vertices = pv.second;
+    std::for_each(partVertices.begin(), partVertices.end(), [&](auto& pv) {
+        auto partId = pv.first;
+        const auto& vertices = pv.second;
+
+        if (indexes_.empty()) {
             std::vector<kvstore::KV> data;
-            std::for_each(vertices.begin(), vertices.end(), [&](auto& v){
+            std::for_each(vertices.begin(), vertices.end(), [&](auto& v) {
                 const auto& tags = v.get_tags();
                 std::for_each(tags.begin(), tags.end(), [&](auto& tag) {
                     VLOG(3) << "PartitionID: " << partId << ", VertexID: " << v.get_id()
@@ -53,11 +52,7 @@ void AddVerticesProcessor::process(const cpp2::AddVerticesRequest& req) {
                 });
             });
             doPut(spaceId_, partId, std::move(data));
-        });
-    } else {
-        std::for_each(partVertices.begin(), partVertices.end(), [&](auto &pv) {
-            auto partId = pv.first;
-            const auto &vertices = pv.second;
+        } else {
             auto atomic = [&]() -> std::string {
                 return addVertices(version, partId, vertices);
             };
@@ -65,27 +60,13 @@ void AddVerticesProcessor::process(const cpp2::AddVerticesRequest& req) {
                 handleAsync(spaceId_, partId, code);
             };
             this->kvstore_->asyncAtomicOp(spaceId_, partId, atomic, callback);
-        });
-    }
+        }
+    });
 }
 
 std::string AddVerticesProcessor::addVertices(int64_t version, PartitionID partId,
                                               const std::vector<cpp2::Vertex>& vertices) {
     std::unique_ptr<kvstore::BatchHolder> batchHolder = std::make_unique<kvstore::BatchHolder>();
-    /*
-     * Define the map newIndexes to avoid inserting duplicate vertex.
-     * This map means :
-     * map<vertex_unique_key, prop_value> ,
-     * -- vertex_unique_key is only used as the unique key , for example:
-     * insert below vertices in the same request:
-     *     kv(part1_vid1_tag1 , v1)
-     *     kv(part1_vid1_tag1 , v2)
-     *     kv(part1_vid1_tag1 , v3)
-     *     kv(part1_vid1_tag1 , v4)
-     *
-     * Ultimately, kv(part1_vid1_tag1 , v4) . It's just what I need.
-     */
-    std::map<std::string, std::string> newVertices;
     std::for_each(vertices.begin(), vertices.end(), [&](auto& v) {
         auto vId = v.get_id();
         const auto& tags = v.get_tags();
@@ -94,85 +75,83 @@ std::string AddVerticesProcessor::addVertices(int64_t version, PartitionID partI
             auto prop = tag.get_props();
             VLOG(3) << "PartitionID: " << partId << ", VertexID: " << vId
                     << ", TagID: " << tagId << ", TagVersion: " << version;
+
             auto key = NebulaKeyUtils::vertexKey(partId, vId, tagId, version);
-            newVertices[key] = std::move(prop);
+            batchHolder->put(std::move(key), std::move(prop));
             if (FLAGS_enable_vertex_cache && this->vertexCache_ != nullptr) {
                 this->vertexCache_->evict(std::make_pair(vId, tagId), partId);
                 VLOG(3) << "Evict cache for vId " << vId << ", tagId " << tagId;
             }
-        });
-    });
 
-    for (auto& v : newVertices) {
-        std::string val;
-        std::unique_ptr<RowReader> nReader;
-        auto tagId = NebulaKeyUtils::getTagId(v.first);
-        auto vId = NebulaKeyUtils::getVertexId(v.first);
-        for (auto& index : indexes_) {
-            if (tagId == index->get_schema_id().get_tag_id()) {
-                /*
-                 * step 1 , Delete old version index if exists.
-                 */
-                if (val.empty() && !FLAGS_ignore_index_check_pre_insert) {
-                    val = findObsoleteIndex(partId, vId, tagId);
+            // auto value = findObsoleteIndex(partId, vId, tagId);
+            // std::unique_ptr<RowReader> nReader;
+            auto original = findOriginalValue(partId, vId, tagId);
+            if (original.ok()) {
+                auto originalReader = RowReader::getTagPropReader(this->schemaMan_,
+                                                                  original,
+                                                                  spaceId_,
+                                                                  tagId);
+                auto newReader = RowReader::getTagPropReader(this->schemaMan_,
+                                                             prop,
+                                                             spaceId_,
+                                                             tagId);
+                
+
+                for (auto& index : indexes_) {
+                    auto originalIndexKey = makeIndexKey(partId, vId, originalReader.get(), index);
+                    auto newIndexKey = makeIndexKey(partId, vId, newReader.get(), index);
+                    if (!originalIndexKey.empty() &&
+                        originalIndexKey != newIndexKey) {
+                        batchHolder->remove(std::move(originalIndexKey));
+                        batchHolder->put(std::move(newIndexKey), "");
+                    }
                 }
-                if (!val.empty()) {
+            }
+
+            for (auto& index : indexes_) {
+                
+                auto current = makeCurrentIndexValue();
+                if (!original.empty() && (original != current)) {
                     auto reader = RowReader::getTagPropReader(this->schemaMan_,
-                                                              val,
+                                                              original,
                                                               spaceId_,
                                                               tagId);
-                    auto oi = indexKey(partId, vId, reader.get(), index);
+                    auto oi = makeIndexKey(partId, vId, reader.get(), index);
                     if (!oi.empty()) {
                         batchHolder->remove(std::move(oi));
                     }
+                    
+                    batchHolder->put(std::move(ni), "");
                 }
-                /*
-                 * step 2 , Insert new vertex index
-                 */
-                if (nReader == nullptr) {
-                    nReader = RowReader::getTagPropReader(this->schemaMan_,
-                                                          v.second,
-                                                          spaceId_,
-                                                          tagId);
-                }
-                auto ni = indexKey(partId,
-                                   vId,
-                                   nReader.get(),
-                                   index);
-                batchHolder->put(std::move(ni), "");
+
+                batchHolder->put(std::move(key), std::move(prop));
             }
-        }
-        /*
-         * step 3 , Insert new vertex data
-         */
-        auto key = v.first;
-        auto prop = v.second;
-        batchHolder->put(std::move(key), std::move(prop));
-    }
+        });
+    });
     return encodeBatchValue(batchHolder->getBatch());
 }
 
-std::string AddVerticesProcessor::findObsoleteIndex(PartitionID partId,
-                                                    VertexID vId,
-                                                    TagID tagId) {
+StatusOr<std::string> AddVerticesProcessor::findOriginalValue(PartitionID partId,
+                                                              VertexID vId,
+                                                              TagID tagId) {
     auto prefix = NebulaKeyUtils::vertexPrefix(partId, vId, tagId);
     std::unique_ptr<kvstore::KVIterator> iter;
     auto ret = kvstore_->prefix(this->spaceId_, partId, prefix, &iter);
     if (ret != kvstore::ResultCode::SUCCEEDED) {
         LOG(ERROR) << "Error! ret = " << static_cast<int32_t>(ret)
                    << ", spaceId " << this->spaceId_;
-        return "";
+        return Status::TagNotFound();
     }
     if (iter && iter->valid()) {
         return iter->val().str();
     }
-    return "";
+    return Status::TagNotFound();
 }
 
-std::string AddVerticesProcessor::indexKey(PartitionID partId,
-                                           VertexID vId,
-                                           RowReader* reader,
-                                           std::shared_ptr<nebula::cpp2::IndexItem> index) {
+std::string AddVerticesProcessor::makeIndexKey(PartitionID partId,
+                                               VertexID vId,
+                                               RowReader* reader,
+                                               std::shared_ptr<nebula::cpp2::IndexItem> index) {
     auto values = collectIndexValues(reader, index->get_fields());
     return NebulaKeyUtils::vertexIndexKey(partId,
                                           index->get_index_id(),
