@@ -97,7 +97,7 @@ void buildRequest(cpp2::GetNeighborsRequest& req, const std::vector<EdgeType>& e
     decltype(req.return_columns) tmpColumns;
     for (int i = 0; i < 3; i++) {
         tmpColumns.emplace_back(TestUtils::vertexPropDef(
-            folly::stringPrintf("tag_%d_col_%d", 3001 + i * 2, i * 2), 3001 + i * 2));
+            folly::stringPrintf("col_%d", i * 2), 3001 + i * 2));
     }
 
     for (auto& e : et) {
@@ -149,10 +149,10 @@ void checkResponse(cpp2::QueryResponse& resp,
 
         EXPECT_EQ(3, size);
 
-        checkTagData<int64_t>(vp.tag_data, 3001, "tag_3001_col_0", vschema, vp.vertex_id + 3001);
-        checkTagData<int64_t>(vp.tag_data, 3003, "tag_3003_col_2", vschema,
+        checkTagData<int64_t>(vp.tag_data, 3001, "col_0", vschema, vp.vertex_id + 3001);
+        checkTagData<int64_t>(vp.tag_data, 3003, "col_2", vschema,
                               vp.vertex_id + 3003 + 2);
-        checkTagData<std::string>(vp.tag_data, 3005, "tag_3005_col_4", vschema,
+        checkTagData<std::string>(vp.tag_data, 3005, "col_4", vschema,
                                   folly::stringPrintf("tag_string_col_4"));
 
         for (auto& ep : vp.edge_data) {
@@ -287,7 +287,7 @@ TEST(QueryBoundTest, FilterTest_OnlyTagFilter) {
 
     LOG(INFO) << "Build filter...";
     auto* tag = new std::string("3001");
-    auto* prop = new std::string("tag_3001_col_0");
+    auto* prop = new std::string("col_0");
     auto* srcExp = new SourcePropertyExpression(tag, prop);
     auto* priExp = new PrimaryExpression(20 + 3001L);
     auto relExp = std::make_unique<RelationalExpression>(srcExp,
@@ -377,7 +377,7 @@ TEST(QueryBoundTest, FilterTest_TagAndEdgeFilter) {
 
     LOG(INFO) << "Build filter...";
     auto* tag = new std::string("3001");
-    auto* prop = new std::string("tag_3001_col_0");
+    auto* prop = new std::string("col_0");
     auto* srcExp = new SourcePropertyExpression(tag, prop);
     auto* priExp = new PrimaryExpression(20 + 3001L);
     auto* left = new RelationalExpression(srcExp,
@@ -419,7 +419,7 @@ TEST(QueryBoundTest, FilterTest_InvalidFilter) {
     mockData(kv.get());
 
     LOG(INFO) << "Build filter...";
-    auto* prop = new std::string("tag_3001_col_0");
+    auto* prop = new std::string("col_0");
     auto inputExp = std::make_unique<InputPropertyExpression>(prop);
 
     cpp2::GetNeighborsRequest req;

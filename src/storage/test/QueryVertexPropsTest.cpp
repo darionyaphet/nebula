@@ -74,7 +74,7 @@ void testWithVersion(kvstore::KVStore* kv,
         decltype(req.return_columns) tmpColumns;
         for (int i = 0; i < 3; i++) {
             tmpColumns.emplace_back(TestUtils::vertexPropDef(
-                folly::stringPrintf("tag_%d_col_%d", 3001 + i * 2, i * 2), 3001 + i * 2));
+                folly::stringPrintf("col_%d", i * 2), 3001 + i * 2));
         }
         req.set_return_columns(std::move(tmpColumns));
 
@@ -108,9 +108,9 @@ void testWithVersion(kvstore::KVStore* kv,
 
             EXPECT_EQ(3, size);
 
-            checkTagData<int64_t>(vp.tag_data, 3001, "tag_3001_col_0", vschema, 0 + version);
-            checkTagData<int64_t>(vp.tag_data, 3003, "tag_3003_col_2", vschema, 2 + version);
-            checkTagData<std::string>(vp.tag_data, 3005, "tag_3005_col_4", vschema,
+            checkTagData<int64_t>(vp.tag_data, 3001, "col_0", vschema, 0 + version);
+            checkTagData<int64_t>(vp.tag_data, 3003, "col_2", vschema, 2 + version);
+            checkTagData<std::string>(vp.tag_data, 3005, "col_4", vschema,
                                     folly::stringPrintf("tag_string_col_%ld", 4 + version));
         }
     }
@@ -150,15 +150,15 @@ void testWithVersion(kvstore::KVStore* kv,
 
             auto schema = schemaMng->getTagSchema(0, 3001, 0);
             ASSERT_NE(nullptr, schema);
-            checkTagData<int64_t>(vp.tag_data, 3001, "tag_3001_col_0", schema, 0 + version);
+            checkTagData<int64_t>(vp.tag_data, 3001, "col_0", schema, 0 + version);
 
             schema = schemaMng->getTagSchema(0, 3003, 0);
             ASSERT_NE(nullptr, schema);
-            checkTagData<int64_t>(vp.tag_data, 3003, "tag_3003_col_2", schema, 2 + version);
+            checkTagData<int64_t>(vp.tag_data, 3003, "col_2", schema, 2 + version);
 
             schema = schemaMng->getTagSchema(0, 3005, 0);
             ASSERT_NE(nullptr, schema);
-            checkTagData<std::string>(vp.tag_data, 3005, "tag_3005_col_4", schema,
+            checkTagData<std::string>(vp.tag_data, 3005, "col_4", schema,
                                     folly::stringPrintf("tag_string_col_%ld", 4 + version));
         }
     }
@@ -230,7 +230,7 @@ TEST(QueryVertexPropsTest, QueryAfterTagAltered) {
         decltype(req.return_columns) tmpColumns;
         for (int i = 0; i < 3; i++) {
             tmpColumns.emplace_back(TestUtils::vertexPropDef(
-                folly::stringPrintf("tag_%d_col_%d", 3001 + i * 2, i * 2), 3001 + i * 2));
+                folly::stringPrintf("col_%d", i * 2), 3001 + i * 2));
             tmpColumns.emplace_back(TestUtils::vertexPropDef("AddedProp", 3001 + i * 2));
         }
         req.set_return_columns(std::move(tmpColumns));
@@ -262,11 +262,11 @@ TEST(QueryVertexPropsTest, QueryAfterTagAltered) {
 
             EXPECT_EQ(6, size);
 
-            checkTagData<int64_t>(vp.tag_data, 3001, "tag_3001_col_0", vschema, 0 + version);
+            checkTagData<int64_t>(vp.tag_data, 3001, "col_0", vschema, 0 + version);
             checkTagData<std::string>(vp.tag_data, 3001, "AddedProp", vschema, "");
-            checkTagData<int64_t>(vp.tag_data, 3003, "tag_3003_col_2", vschema, 2 + version);
+            checkTagData<int64_t>(vp.tag_data, 3003, "col_2", vschema, 2 + version);
             checkTagData<std::string>(vp.tag_data, 3003, "AddedProp", vschema, "");
-            checkTagData<std::string>(vp.tag_data, 3005, "tag_3005_col_4", vschema,
+            checkTagData<std::string>(vp.tag_data, 3005, "col_4", vschema,
                                     folly::stringPrintf("tag_string_col_%ld", 4 + version));
             checkTagData<std::string>(vp.tag_data, 3005, "AddedProp", vschema, "");
         }
@@ -321,7 +321,7 @@ TEST(QueryVertexPropsTest, QueryAfterTagAltered) {
         decltype(req.return_columns) tmpColumns;
         for (int i = 0; i < 3; i++) {
             tmpColumns.emplace_back(TestUtils::vertexPropDef(
-                folly::stringPrintf("tag_%d_col_%d", 3001 + i * 2, i * 2), 3001 + i * 2));
+                folly::stringPrintf("col_%d", i * 2), 3001 + i * 2));
             tmpColumns.emplace_back(TestUtils::vertexPropDef("AddedProp", 3001 + i * 2));
         }
         req.set_return_columns(std::move(tmpColumns));
@@ -353,11 +353,11 @@ TEST(QueryVertexPropsTest, QueryAfterTagAltered) {
 
             EXPECT_EQ(6, size);
 
-            checkTagData<int64_t>(vp.tag_data, 3001, "tag_3001_col_0", vschema, 0 + version);
+            checkTagData<int64_t>(vp.tag_data, 3001, "col_0", vschema, 0 + version);
             checkTagData<std::string>(vp.tag_data, 3001, "AddedProp", vschema, "AddedPropValue");
-            checkTagData<int64_t>(vp.tag_data, 3003, "tag_3003_col_2", vschema, 2 + version);
+            checkTagData<int64_t>(vp.tag_data, 3003, "col_2", vschema, 2 + version);
             checkTagData<std::string>(vp.tag_data, 3003, "AddedProp", vschema, "AddedPropValue");
-            checkTagData<std::string>(vp.tag_data, 3005, "tag_3005_col_4", vschema,
+            checkTagData<std::string>(vp.tag_data, 3005, "col_4", vschema,
                                     folly::stringPrintf("tag_string_col_%ld", 4 + version));
             checkTagData<std::string>(vp.tag_data, 3005, "AddedProp", vschema, "AddedPropValue");
         }
@@ -397,7 +397,7 @@ TEST(QueryVertexPropsTest, QueryAfterTagAltered) {
         decltype(req.return_columns) tmpColumns;
         for (int i = 0; i < 3; i++) {
             tmpColumns.emplace_back(TestUtils::vertexPropDef(
-                folly::stringPrintf("tag_%d_col_%d", 3001 + i * 2, i * 2), 3001 + i * 2));
+                folly::stringPrintf("col_%d", i * 2), 3001 + i * 2));
             tmpColumns.emplace_back(TestUtils::vertexPropDef("AddedProp", 3001 + i * 2));
         }
         req.set_return_columns(std::move(tmpColumns));
@@ -429,11 +429,11 @@ TEST(QueryVertexPropsTest, QueryAfterTagAltered) {
 
             EXPECT_EQ(6, size);
 
-            checkTagData<int64_t>(vp.tag_data, 3001, "tag_3001_col_0", vschema, 0 + version);
+            checkTagData<int64_t>(vp.tag_data, 3001, "col_0", vschema, 0 + version);
             checkTagData<int64_t>(vp.tag_data, 3001, "AddedProp", vschema, 0);
-            checkTagData<int64_t>(vp.tag_data, 3003, "tag_3003_col_2", vschema, 2 + version);
+            checkTagData<int64_t>(vp.tag_data, 3003, "col_2", vschema, 2 + version);
             checkTagData<int64_t>(vp.tag_data, 3003, "AddedProp", vschema, 0);
-            checkTagData<std::string>(vp.tag_data, 3005, "tag_3005_col_4", vschema,
+            checkTagData<std::string>(vp.tag_data, 3005, "col_4", vschema,
                                     folly::stringPrintf("tag_string_col_%ld", 4 + version));
             checkTagData<int64_t>(vp.tag_data, 3005, "AddedProp", vschema, 0);
         }

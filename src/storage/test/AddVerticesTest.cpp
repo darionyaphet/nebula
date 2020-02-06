@@ -33,7 +33,8 @@ TEST(AddVerticesTest, SimpleTest) {
     // Vertex => {Id, List<VertexProp>}
     // VertexProp => {tagId, tags}
     for (PartitionID partId = 0; partId < 3; partId++) {
-        auto vertices = TestUtils::setupVertices(partId, partId * 10, 10 * (partId + 1));
+        auto vertices = TestUtils::setupVertices(10 * partId,
+                                                 10 * (partId + 1));
         req.parts.emplace(partId, std::move(vertices));
     }
 
@@ -49,13 +50,13 @@ TEST(AddVerticesTest, SimpleTest) {
             auto prefix = NebulaKeyUtils::vertexPrefix(partId, vertexId);
             std::unique_ptr<kvstore::KVIterator> iter;
             EXPECT_EQ(kvstore::ResultCode::SUCCEEDED, kv->prefix(0, partId, prefix, &iter));
-            TagID tagId = 0;
+            TagID tagId = 3001;
             while (iter->valid()) {
-                EXPECT_EQ(folly::stringPrintf("%d_%ld_%d", partId, vertexId, tagId), iter->val());
+                EXPECT_EQ(TestUtils::setupEncode(), iter->val());
                 tagId++;
                 iter->next();
             }
-            EXPECT_EQ(10, tagId);
+            EXPECT_EQ(3010, tagId);
         }
     }
 }

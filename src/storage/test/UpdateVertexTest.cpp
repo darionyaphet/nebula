@@ -34,7 +34,7 @@ void mockData(kvstore::KVStore* kv) {
                         writer << partId + tagId + version + numInt;
                     }
                     for (auto numString = 3; numString < 6; numString++) {
-                        writer << folly::stringPrintf("tag_string_col_%d_%d", numString, version);
+                        writer << folly::stringPrintf("string_col_%d_%d", numString, version);
                     }
                     auto val = writer.encode();
                     data.emplace_back(std::move(key), std::move(val));
@@ -70,19 +70,19 @@ TEST(UpdateVertexTest, Set_Filter_Yield_Test) {
     req.set_vertex_id(vertexId);
     req.set_part_id(partId);
     LOG(INFO) << "Build filter...";
-    // left int: $^.3001.tag_3001_col_2 >= 3001
+    // left int: $^.3001.col_2 >= 3001
     auto* tag1 = new std::string("3001");
-    auto* prop1 = new std::string("tag_3001_col_2");
+    auto* prop1 = new std::string("col_2");
     auto* srcExp1 = new SourcePropertyExpression(tag1, prop1);
     auto* priExp1 = new PrimaryExpression(3001L);
     auto* left = new RelationalExpression(srcExp1,
                                           RelationalExpression::Operator::GE,
                                           priExp1);
-    // right string: $^.3003.tag_3003_col_3 == tag_string_col_3_2;
+    // right string: $^.3003.col_3 == string_col_3_2;
     auto* tag2 = new std::string("3003");
-    auto* prop2 = new std::string("tag_3003_col_3");
+    auto* prop2 = new std::string("col_3");
     auto* srcExp2 = new SourcePropertyExpression(tag2, prop2);
-    std::string col3("tag_string_col_3_2");
+    std::string col3("string_col_3_2");
     auto* priExp2 = new PrimaryExpression(col3);
     auto* right = new RelationalExpression(srcExp2,
                                            RelationalExpression::Operator::EQ,
@@ -92,29 +92,29 @@ TEST(UpdateVertexTest, Set_Filter_Yield_Test) {
     req.set_filter(Expression::encode(logExp.get()));
     LOG(INFO) << "Build update items...";
     std::vector<cpp2::UpdateItem> items;
-    // int: 3001.tag_3001_col_0 = 1
+    // int: 3001.col_0 = 1
     cpp2::UpdateItem item1;
     item1.set_name("3001");
-    item1.set_prop("tag_3001_col_0");
+    item1.set_prop("col_0");
     PrimaryExpression val1(1L);
     item1.set_value(Expression::encode(&val1));
     items.emplace_back(item1);
-    // string: 3005.tag_3005_col_4 = tag_string_col_4_2_new
+    // string: 3005.col_4 = tag_string_col_4_2_new
     cpp2::UpdateItem item2;
     item2.set_name("3005");
-    item2.set_prop("tag_3005_col_4");
-    std::string col4new("tag_string_col_4_2_new");
+    item2.set_prop("col_4");
+    std::string col4new("string_col_4_2_new");
     PrimaryExpression val2(col4new);
     item2.set_value(Expression::encode(&val2));
     items.emplace_back(item2);
     req.set_update_items(std::move(items));
     LOG(INFO) << "Build yield...";
-    // Return tag props: 3001.tag_3001_col_0, 3003.tag_3003_col_2, 3005.tag_3005_col_4
+    // Return tag props: 3001.col_0, 3003.col_2, 3005.col_4
     decltype(req.return_columns) tmpColumns;
     for (int i = 0; i < 3; i++) {
         SourcePropertyExpression sourcePropExp(
             new std::string(folly::to<std::string>(3001 + i * 2)),
-            new std::string(folly::stringPrintf("tag_%d_col_%d", 3001 + i * 2, i * 2)));
+            new std::string(folly::stringPrintf("col_%d", i * 2)));
         tmpColumns.emplace_back(Expression::encode(&sourcePropExp));
     }
     req.set_return_columns(std::move(tmpColumns));
@@ -152,7 +152,7 @@ TEST(UpdateVertexTest, Set_Filter_Yield_Test) {
                 }
                 case 2: {
                     auto&& v2 = value(std::move(res));
-                    EXPECT_STREQ("tag_string_col_4_2_new", boost::get<std::string>(v2).c_str());
+                    EXPECT_STREQ("string_col_4_2_new", boost::get<std::string>(v2).c_str());
                     break;
                 }
                 default:
@@ -176,7 +176,7 @@ TEST(UpdateVertexTest, Set_Filter_Yield_Test) {
         auto tagSchema = schemaMan->getTagSchema(spaceId, 3001 + i * 2);
         auto tagReader = RowReader::getRowReader(values[i], tagSchema);
         auto res = RowReader::getPropByName(tagReader.get(),
-                                            folly::stringPrintf("tag_%d_col_%d", 3001 + i*2, i*2));
+                                            folly::stringPrintf("col_%d", i*2));
         CHECK(ok(res));
         switch (i) {
             case 0: {
@@ -191,7 +191,7 @@ TEST(UpdateVertexTest, Set_Filter_Yield_Test) {
             }
             case 2: {
                 auto&& v2 = value(std::move(res));
-                EXPECT_STREQ("tag_string_col_4_2_new", boost::get<std::string>(v2).c_str());
+                EXPECT_STREQ("string_col_4_2_new", boost::get<std::string>(v2).c_str());
                 break;
             }
             default:
@@ -221,41 +221,41 @@ TEST(UpdateVertexTest, Insertable_Test) {
     req.set_filter("");
     LOG(INFO) << "Build update items...";
     std::vector<cpp2::UpdateItem> items;
-    // int: 3001.tag_3001_col_0 = 1
+    // int: 3001.col_0 = 1
     cpp2::UpdateItem item1;
     item1.set_name("3001");
-    item1.set_prop("tag_3001_col_0");
+    item1.set_prop("col_0");
     PrimaryExpression val1(1L);
     item1.set_value(Expression::encode(&val1));
     items.emplace_back(item1);
-    // string: 3009.tag_3009_col_4 = tag_string_col_4_2_new
+    // string: 3009.col_4 = tag_string_col_4_2_new
     cpp2::UpdateItem item2;
     item2.set_name("3009");
-    item2.set_prop("tag_3009_col_4");
-    std::string col4new("tag_string_col_4_2_new");
+    item2.set_prop("col_4");
+    std::string col4new("string_col_4_2_new");
     PrimaryExpression val2(col4new);
     item2.set_value(Expression::encode(&val2));
     items.emplace_back(item2);
     req.set_update_items(std::move(items));
     LOG(INFO) << "Build yield...";
-    // Return tag props: tag_3001_col_0, tag_3003_col_2, tag_3005_col_4
+    // Return tag props: col_0, col_2, col_4
     decltype(req.return_columns) tmpColumns;
     for (int i = 0; i < 3; i++) {
         SourcePropertyExpression sourcePropExp(
             new std::string(folly::to<std::string>(3001 + i * 2)),
-            new std::string(folly::stringPrintf("tag_%d_col_%d", 3001 + i * 2, i * 2)));
+            new std::string(folly::stringPrintf("col_%d", i * 2)));
         tmpColumns.emplace_back(Expression::encode(&sourcePropExp));
     }
-    // tag_3009_col_0 ~ tag_3009_col_5
+    // col_0 ~ col_5
     for (int i = 0; i < 6; i++) {
         SourcePropertyExpression sourcePropExp(
             new std::string(folly::to<std::string>(3009)),
-            new std::string(folly::stringPrintf("tag_3009_col_%d", i)));
+            new std::string(folly::stringPrintf("col_%d", i)));
         tmpColumns.emplace_back(Expression::encode(&sourcePropExp));
     }
     req.set_return_columns(std::move(tmpColumns));
     LOG(INFO) << "Make it insertable...";
-    // insert tag: 3009.tag_3009_col_4
+    // insert tag: 3009.col_4
     req.set_insertable(true);
 
     LOG(INFO) << "Test UpdateVertexRequest...";
@@ -274,23 +274,23 @@ TEST(UpdateVertexTest, Insertable_Test) {
     auto provider = std::make_shared<ResultSchemaProvider>(resp.schema);
     auto reader = RowReader::getRowReader(resp.data, provider);
     EXPECT_EQ(3 + 6, reader->numFields());
-    // 3001.tag_3001_col_0
+    // 3001.col_0
     auto res = RowReader::getPropByIndex(reader.get(), 0);
     if (ok(res)) {
         auto&& v = value(std::move(res));
         EXPECT_EQ(1L, boost::get<int64_t>(v));
     }
-    // 3003.tag_3003_col_2
+    // 3003.col_2
     res = RowReader::getPropByIndex(reader.get(), 1);
     if (ok(res)) {
         auto&& v = value(std::move(res));
         EXPECT_EQ(0 + 3003 + 2 + 2, boost::get<int64_t>(v));
     }
-    // 3009.tag_3009_col_4
+    // 3009.col_4
     res = RowReader::getPropByIndex(reader.get(), 7);
     if (ok(res)) {
         auto&& v = value(std::move(res));
-        EXPECT_STREQ("tag_string_col_4_2_new", boost::get<std::string>(v).c_str());
+        EXPECT_STREQ("string_col_4_2_new", boost::get<std::string>(v).c_str());
     }
     // get tag3009 from kvstore directly
     auto prefix = NebulaKeyUtils::vertexPrefix(partId, vertexId, 3009);
@@ -302,7 +302,7 @@ TEST(UpdateVertexTest, Insertable_Test) {
     res = RowReader::getPropByName(reader.get(), item2.get_prop());
     EXPECT_TRUE(ok(res));
     auto&& v = value(std::move(res));
-    EXPECT_STREQ("tag_string_col_4_2_new", boost::get<std::string>(v).c_str());
+    EXPECT_STREQ("string_col_4_2_new", boost::get<std::string>(v).c_str());
 }
 
 
@@ -326,10 +326,10 @@ TEST(UpdateVertexTest, Invalid_Set_Test) {
     req.set_filter("");
     LOG(INFO) << "Build invalid update items...";
     std::vector<cpp2::UpdateItem> items;
-    // 3001.tag_3001_col_0 = e101.col_0
+    // 3001.col_0 = e101.col_0
     cpp2::UpdateItem item;
     item.set_name("3001");
-    item.set_prop("tag_3001_col_0");
+    item.set_prop("col_0");
     auto* alias = new std::string("e101");
     auto* edgeProp = new std::string("col_0");
     AliasPropertyExpression edgeExp(new std::string(""), alias, edgeProp);
@@ -375,15 +375,15 @@ TEST(UpdateVertexTest, Invalid_Filter_Test) {
     req.set_part_id(partId);
     req.set_filter("");
     LOG(INFO) << "Build invalid filter...";
-    auto* prop = new std::string("tag_3001_col_0");
+    auto* prop = new std::string("col_0");
     auto inputExp = std::make_unique<InputPropertyExpression>(prop);
     req.set_filter(Expression::encode(inputExp.get()));
     LOG(INFO) << "Build update items...";
     std::vector<cpp2::UpdateItem> items;
-    // int: 3001.tag_3001_col_0 = 1L
+    // int: 3001.col_0 = 1L
     cpp2::UpdateItem item;
     item.set_name("3001");
-    item.set_prop("tag_3001_col_0");
+    item.set_prop("col_0");
     PrimaryExpression val(1L);
     item.set_value(Expression::encode(&val));
     items.emplace_back(item);

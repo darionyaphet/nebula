@@ -32,7 +32,7 @@ TEST(AddEdgesTest, SimpleTest) {
     // partId => List<Edge>
     // Edge => {EdgeKey, props}
     for (PartitionID partId = 1; partId <= 3; partId++) {
-        auto edges = TestUtils::setupEdges(partId, partId * 10, 10 * (partId + 1));
+        auto edges = TestUtils::setupEdges(10 * partId, 10 * (partId + 1));
         req.parts.emplace(partId, std::move(edges));
     }
 
@@ -45,12 +45,12 @@ TEST(AddEdgesTest, SimpleTest) {
     LOG(INFO) << "Check data in kv store...";
     for (PartitionID partId = 1; partId <= 3; partId++) {
         for (VertexID srcId = 10 * partId; srcId < 10 * (partId + 1); srcId++) {
-            auto prefix = NebulaKeyUtils::edgePrefix(partId, srcId, srcId * 100 + 1);
+            auto prefix = NebulaKeyUtils::edgePrefix(partId, srcId, 100 + 1);
             std::unique_ptr<kvstore::KVIterator> iter;
             EXPECT_EQ(kvstore::ResultCode::SUCCEEDED, kv->prefix(0, partId, prefix, &iter));
             int num = 0;
             while (iter->valid()) {
-                EXPECT_EQ(folly::stringPrintf("%d_%ld", partId, srcId), iter->val());
+                EXPECT_EQ(TestUtils::setupEncode(10, 20), iter->val());
                 num++;
                 iter->next();
             }

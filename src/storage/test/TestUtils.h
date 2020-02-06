@@ -83,10 +83,10 @@ public:
     static std::unique_ptr<AdHocSchemaManager> mockSchemaMan(GraphSpaceID spaceId = 0) {
         auto schemaMan = std::make_unique<AdHocSchemaManager>();
         for (TagID tagId = 3001; tagId < 3010; tagId++) {
-            schemaMan->addTagSchema(spaceId, tagId, TestUtils::genTagSchemaProvider(tagId, 3, 3));
+            schemaMan->addTagSchema(spaceId, tagId, TestUtils::genSchemaProvider(3, 3));
         }
         for (EdgeType edgeType = 101; edgeType < 110; edgeType++) {
-            schemaMan->addEdgeSchema(spaceId, edgeType, TestUtils::genEdgeSchemaProvider(10, 10));
+            schemaMan->addEdgeSchema(spaceId, edgeType, TestUtils::genSchemaProvider(10, 10));
         }
         return schemaMan;
     }
@@ -101,13 +101,13 @@ public:
             std::vector<nebula::cpp2::ColumnDef> columns;
             for (int32_t i = 0; i < 3; i++) {
                 nebula::cpp2::ColumnDef column;
-                column.name = folly::stringPrintf("tag_%d_col_%d", tagId, i);
+                column.name = folly::stringPrintf("col_%d", i);
                 column.type.type = nebula::cpp2::SupportedType::INT;
                 columns.emplace_back(std::move(column));
             }
             for (int32_t i = 3; i < 6; i++) {
                 nebula::cpp2::ColumnDef column;
-                column.name = folly::stringPrintf("tag_%d_col_%d", tagId, i);
+                column.name = folly::stringPrintf("col_%d", i);
                 column.type.type = nebula::cpp2::SupportedType::STRING;
                 columns.emplace_back(std::move(column));
             }
@@ -145,11 +145,11 @@ public:
             for (int32_t i = 0; i < 3; i++) {
                 std::vector<nebula::cpp2::ColumnDef> columns;
                 nebula::cpp2::ColumnDef column;
-                column.name = folly::stringPrintf("tag_%d_col_%d", tagId, i);
+                column.name = folly::stringPrintf("col_%d", i);
                 column.type.type = nebula::cpp2::SupportedType::INT;
                 columns.emplace_back(std::move(column));
 
-                column.name = folly::stringPrintf("tag_%d_col_%d", tagId, i + 3);
+                column.name = folly::stringPrintf("col_%d", i + 3);
                 column.type.type = nebula::cpp2::SupportedType::STRING;
                 columns.emplace_back(std::move(column));
                 indexMan->addTagIndex(spaceId, tagId + 1000, tagId, std::move(columns));
@@ -175,8 +175,8 @@ public:
     }
 
     static std::vector<cpp2::Vertex>
-    setupVertices(PartitionID partitionID, VertexID vIdFrom, VertexID vIdTo,
-                  TagID tagFrom = 0, TagID tagTo = 10) {
+    setupVertices(VertexID vIdFrom, VertexID vIdTo,
+                  TagID tagFrom = 3001, TagID tagTo = 3010) {
         // partId => List<Vertex>
         // Vertex => {Id, List<VertexProp>}
         // VertexProp => {tagId, tags}
@@ -186,7 +186,7 @@ public:
               for (TagID tId = tagFrom; tId < tagTo; tId++) {
                   cpp2::Tag t;
                   t.set_tag_id(tId);
-                  t.set_props(folly::stringPrintf("%d_%ld_%d", partitionID, vId, tId));
+                  t.set_props(setupEncode());
                   tags.emplace_back(std::move(t));
               }
               cpp2::Vertex v;
@@ -198,29 +198,31 @@ public:
     }
 
     static std::vector<cpp2::Edge>
-    setupEdges(PartitionID part, VertexID srcFrom,
-               VertexID srcTo, std::string fmt = "%d_%ld") {
+    setupEdges(VertexID srcFrom,
+               VertexID srcTo, std::string fmt = "col_%d") {
         std::vector<cpp2::Edge> edges;
         for (VertexID srcId = srcFrom; srcId < srcTo; srcId++) {
             cpp2::EdgeKey key;
             key.set_src(srcId);
-            key.set_edge_type(srcId * 100 + 1);
+            key.set_edge_type(100 + 1);
             key.set_ranking(srcId * 100 + 2);
-            key.set_dst(srcId * 100 + 3);
+            key.set_dst(srcId + 3);
             edges.emplace_back();
             edges.back().set_key(std::move(key));
-            edges.back().set_props(folly::stringPrintf(fmt.c_str(), part, srcId));
+            edges.back().set_props(setupEncode(10, 20, fmt));
         }
         return edges;
     }
 
-    static std::string setupEncode(int32_t intSize = 3, int32_t stringSize = 6) {
+    static std::string setupEncode(int32_t intSize = 3,
+                                   int32_t stringSize = 6,
+                                   std::string fmt = "col_%d") {
         RowWriter writer;
         for (int32_t numInt = 0; numInt < intSize; numInt++) {
             writer << numInt;
         }
         for (int32_t numString = intSize; numString < stringSize; numString++) {
-            writer << folly::stringPrintf("string_col_%d", numString);
+            writer << folly::stringPrintf(fmt.c_str(), numString);
         }
         return writer.encode();
     }
@@ -230,7 +232,7 @@ public:
      * It will generate SchemaProvider with some int fields and string fields
      * */
     static std::shared_ptr<meta::SchemaProviderIf>
-    genEdgeSchemaProvider(int32_t intFieldsNum, int32_t stringFieldsNum) {
+    genSchemaProvider(int32_t intFieldsNum, int32_t stringFieldsNum) {
         nebula::cpp2::Schema schema;
         for (int32_t i = 0; i < intFieldsNum; i++) {
             nebula::cpp2::ColumnDef column;
@@ -241,28 +243,6 @@ public:
         for (int32_t i = intFieldsNum; i < intFieldsNum + stringFieldsNum; i++) {
             nebula::cpp2::ColumnDef column;
             column.name = folly::stringPrintf("col_%d", i);
-            column.type.type = nebula::cpp2::SupportedType::STRING;
-            schema.columns.emplace_back(std::move(column));
-        }
-        return std::make_shared<ResultSchemaProvider>(std::move(schema));
-    }
-
-
-    /**
-     * It will generate tag SchemaProvider with some int fields and string fields
-     * */
-    static std::shared_ptr<meta::SchemaProviderIf>
-    genTagSchemaProvider(TagID tagId, int32_t intFieldsNum, int32_t stringFieldsNum) {
-        nebula::cpp2::Schema schema;
-        for (int32_t i = 0; i < intFieldsNum; i++) {
-            nebula::cpp2::ColumnDef column;
-            column.name = folly::stringPrintf("tag_%d_col_%d", tagId, i);
-            column.type.type = nebula::cpp2::SupportedType::INT;
-            schema.columns.emplace_back(std::move(column));
-        }
-        for (int32_t i = intFieldsNum; i < intFieldsNum + stringFieldsNum; i++) {
-            nebula::cpp2::ColumnDef column;
-            column.name = folly::stringPrintf("tag_%d_col_%d", tagId, i);
             column.type.type = nebula::cpp2::SupportedType::STRING;
             schema.columns.emplace_back(std::move(column));
         }

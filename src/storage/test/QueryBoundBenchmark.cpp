@@ -88,10 +88,10 @@ void setUp(const char* path) {
     gKV = TestUtils::initKV(path);
     schema.reset(new storage::AdHocSchemaManager());
     schema->addEdgeSchema(
-        0 /*space id*/, 101 /*edge type*/, TestUtils::genEdgeSchemaProvider(10, 10));
+        0 /*space id*/, 101 /*edge type*/, TestUtils::genSchemaProvider(10, 10));
     for (TagID tagId = 3001; tagId < 3010; tagId++) {
         schema->addTagSchema(
-            0 /*space id*/, tagId, TestUtils::genTagSchemaProvider(tagId, 3, 3));
+            0 /*space id*/, tagId, TestUtils::genSchemaProvider(3, 3));
     }
     mockData(gKV.get());
 }
@@ -113,7 +113,7 @@ cpp2::GetNeighborsRequest buildRequest(bool outBound = true) {
     decltype(req.return_columns) tmpColumns;
     for (int i = 0; i < 3; i++) {
         tmpColumns.emplace_back(TestUtils::vertexPropDef(
-            folly::stringPrintf("tag_%d_col_%d", 3001 + i * 2, i * 2), 3001 + i * 2));
+            folly::stringPrintf("col_%d", i * 2), 3001 + i * 2));
     }
     tmpColumns.emplace_back(
         TestUtils::edgePropDef(folly::stringPrintf("_dst"), PropContext::PropInKeyType::DST));

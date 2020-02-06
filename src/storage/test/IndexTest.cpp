@@ -35,14 +35,7 @@ TEST(IndexTest, InsertVerticesTest) {
         for (auto vertexId = partId * 10; vertexId < 10 * (partId + 1); vertexId++) {
             std::vector<cpp2::Tag> tags;
             for (auto tagId = 3001; tagId < 3010; tagId++) {
-                RowWriter writer;
-                for (int64_t numInt = 0; numInt < 3; numInt++) {
-                    writer << numInt;
-                }
-                for (auto numString = 3; numString < 6; numString++) {
-                    writer << folly::stringPrintf("tag_string_col_%d", numString);
-                }
-                auto val = writer.encode();
+                auto val = TestUtils::setupEncode();
                 cpp2::Tag tag;
                 tag.set_tag_id(tagId);
                 tag.set_props(std::move(val));
@@ -119,14 +112,7 @@ TEST(IndexTest, InsertEdgeTest) {
                 for (auto version = 0; version < 3; version++) {
                     for (auto edgeType = 101; edgeType < 110; edgeType++) {
                         cpp2::EdgeKey key;
-                        RowWriter writer(nullptr);
-                        for (uint64_t numInt = 0; numInt < 10; numInt++) {
-                            writer << (dstId + numInt);
-                        }
-                        for (auto numString = 10; numString < 20; numString++) {
-                            writer << folly::stringPrintf("string_col_%d_%d", numString, version);
-                        }
-                        auto val = writer.encode();
+                        auto val = TestUtils::setupEncode(10, 20);
                         key.set_src(vertexId);
                         key.set_edge_type(edgeType);
                         key.set_ranking(0);
@@ -195,7 +181,7 @@ TEST(IndexTest, DeleteVertexTest) {
                     writer << numInt;
                 }
                 for (auto numString = 3; numString < 6; numString++) {
-                    writer << folly::stringPrintf("tag_string_col_%d", numString);
+                    writer << folly::stringPrintf("string_col_%d", numString);
                 }
                 auto val = writer.encode();
                 cpp2::Tag tag;
@@ -330,7 +316,7 @@ TEST(IndexTest, DeleteEdgeTest) {
 }
 
 TEST(IndexTest, UpdateVertexTest) {
-    fs::TempDir rootPath("/tmp/DeleteVertexTest.XXXXXX");
+    fs::TempDir rootPath("/tmp/UpdateVertexTest.XXXXXX");
     std::unique_ptr<kvstore::KVStore> kv = TestUtils::initKV(rootPath.path());
     LOG(INFO) << "Prepare meta...";
     auto schemaMan = TestUtils::mockSchemaMan();
@@ -343,14 +329,7 @@ TEST(IndexTest, UpdateVertexTest) {
             std::vector<cpp2::Vertex> vertices;
             std::vector<cpp2::Tag> tags;
             for (auto tagId = 3001; tagId < 3010; tagId++) {
-                RowWriter writer;
-                for (int64_t numInt = 0; numInt < 3; numInt++) {
-                    writer << tagId + numInt;
-                }
-                for (auto numString = 3; numString < 6; numString++) {
-                    writer << folly::stringPrintf("tag_string_col_%d", numString);
-                }
-                auto val = writer.encode();
+                auto val = TestUtils::setupEncode();
                 cpp2::Tag tag;
                 tag.set_tag_id(tagId);
                 tag.set_props(std::move(val));
@@ -378,19 +357,20 @@ TEST(IndexTest, UpdateVertexTest) {
         req.set_vertex_id(10);
         req.set_part_id(1);
         LOG(INFO) << "Build filter...";
-        // left int: $^.3001.tag_3001_col_2 >= 3001
+
+        // left int: $^.3001.col_2 >= 2
         auto* tag1 = new std::string("3001");
-        auto* prop1 = new std::string("tag_3001_col_2");
+        auto* prop1 = new std::string("col_2");
         auto* srcExp1 = new SourcePropertyExpression(tag1, prop1);
-        auto* priExp1 = new PrimaryExpression(3001L);
+        auto* priExp1 = new PrimaryExpression(2L);
         auto* left = new RelationalExpression(srcExp1,
                                               RelationalExpression::Operator::GE,
                                               priExp1);
-        // right string: $^.3003.tag_3003_col_3 == tag_string_col_3_2;
+        // right string: $^.3003.col_3 == col_3_2;
         auto* tag2 = new std::string("3003");
-        auto* prop2 = new std::string("tag_3003_col_3");
+        auto* prop2 = new std::string("col_3");
         auto* srcExp2 = new SourcePropertyExpression(tag2, prop2);
-        std::string col3("tag_string_col_3");
+        std::string col3("col_3");
         auto* priExp2 = new PrimaryExpression(col3);
         auto* right = new RelationalExpression(srcExp2,
                                                RelationalExpression::Operator::EQ,
@@ -400,29 +380,31 @@ TEST(IndexTest, UpdateVertexTest) {
         req.set_filter(Expression::encode(logExp.get()));
         LOG(INFO) << "Build update items...";
         std::vector<cpp2::UpdateItem> items;
-        // int: 3001.tag_3001_col_0 = 1
+        // int: 3001.col_0 = 1
         cpp2::UpdateItem item1;
         item1.set_name("3001");
-        item1.set_prop("tag_3001_col_0");
+        item1.set_prop("col_0");
         PrimaryExpression val1(1L);
         item1.set_value(Expression::encode(&val1));
         items.emplace_back(item1);
-        // string: 3005.tag_3005_col_4 = tag_string_col_4_2_new
+
+        // string: 3005.col_4 = col_4_2_new
         cpp2::UpdateItem item2;
         item2.set_name("3005");
-        item2.set_prop("tag_3005_col_4");
-        std::string col4new("tag_string_col_4_2_new");
+        item2.set_prop("col_4");
+        std::string col4new("col_4_2_new");
         PrimaryExpression val2(col4new);
         item2.set_value(Expression::encode(&val2));
         items.emplace_back(item2);
         req.set_update_items(std::move(items));
+
         LOG(INFO) << "Build yield...";
-        // Return tag props: 3001.tag_3001_col_0, 3003.tag_3003_col_2, 3005.tag_3005_col_4
+        // Return tag props: 3001.col_0, 3003.col_2, 3005.col_4
         decltype(req.return_columns) tmpColumns;
         for (int i = 0; i < 3; i++) {
             SourcePropertyExpression sourcePropExp(
                     new std::string(folly::to<std::string>(3001 + i * 2)),
-                    new std::string(folly::stringPrintf("tag_%d_col_%d", 3001 + i * 2, i * 2)));
+                    new std::string(folly::stringPrintf("col_%d", i * 2)));
             tmpColumns.emplace_back(Expression::encode(&sourcePropExp));
         }
         req.set_return_columns(std::move(tmpColumns));
@@ -436,6 +418,7 @@ TEST(IndexTest, UpdateVertexTest) {
         auto f = processor->getFuture();
         processor->process(req);
         auto resp = std::move(f).get();
+        EXPECT_EQ(0, resp.result.failed_codes.size());
 
         LOG(INFO) << "Verify index ...";
         std::vector<std::string> keys;
@@ -452,13 +435,14 @@ TEST(IndexTest, UpdateVertexTest) {
         EXPECT_EQ(9, keys.size());
         int32_t oldHint = 0 , newHint = 0;
         for (auto& key : keys) {
-            auto pos = key.find("tag_string_col_3tag_string_col_4tag_string_col");
-            if (pos != std::string::npos) {
-                oldHint++;
-            }
-            pos = key.find("tag_string_col_3tag_string_col_4_2_newtag_string_col");
+            auto pos = key.find("col_3col_4_2_newcol");
             if (pos != std::string::npos) {
                 newHint++;
+                continue;
+            }
+            pos = key.find("col_3col_4col");
+            if (pos != std::string::npos) {
+                oldHint++;
             }
         }
         EXPECT_EQ(8, oldHint);
@@ -485,20 +469,13 @@ TEST(IndexTest, UpdateEdgeTest) {
             std::vector<cpp2::Edge> edges;
             for (auto edgeType = 101; edgeType < 110; edgeType++) {
                 cpp2::EdgeKey key;
-                RowWriter writer(nullptr);
-                for (uint64_t numInt = 0; numInt < 10; numInt++) {
-                    writer << (numInt);
-                }
-                for (auto numString = 10; numString < 20; numString++) {
-                    writer << folly::stringPrintf("string_col_%d", numString);
-                }
-                auto val = writer.encode();
                 key.set_src(10);
                 key.set_edge_type(edgeType);
                 key.set_ranking(0);
                 key.set_dst(10001);
                 edges.emplace_back();
                 edges.back().set_key(key);
+                auto val = TestUtils::setupEncode(10, 20);
                 edges.back().set_props(std::move(val));
             }
             req.parts.emplace(1, std::move(edges));
@@ -531,7 +508,7 @@ TEST(IndexTest, UpdateEdgeTest) {
         cpp2::UpdateItem item;
         item.set_name("101");
         item.set_prop("col_10");
-        std::string col10new("string_col_10_2_new");
+        std::string col10new("col_10_2_new");
         PrimaryExpression val2(col10new);
         item.set_value(Expression::encode(&val2));
         items.emplace_back(item);
@@ -567,13 +544,14 @@ TEST(IndexTest, UpdateEdgeTest) {
         EXPECT_EQ(9, keys.size());
         int32_t oldHint = 0 , newHint = 0;
         for (auto& key : keys) {
-            auto pos = key.find("col_10string");
-            if (pos != std::string::npos) {
-                oldHint++;
-            }
-            pos = key.find("col_10_2_newstring");
+            auto pos = key.find("col_10_2_new");
             if (pos != std::string::npos) {
                 newHint++;
+                continue;
+            }
+            pos = key.find("col_10");
+            if (pos != std::string::npos) {
+                oldHint++;
             }
         }
         EXPECT_EQ(8, oldHint);

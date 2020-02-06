@@ -32,8 +32,8 @@ TEST(DeleteVertexTest, SimpleTest) {
         req.space_id = 0;
         req.overwritable = false;
         // partId => List<Vertex>
-        for (PartitionID partId = 0; partId < 3; partId++) {
-            auto vertices = TestUtils::setupVertices(partId, partId * 10, 10 * (partId + 1));
+        for (PartitionID partId = 1; partId <= 3; partId++) {
+            auto vertices = TestUtils::setupVertices(10 * partId, 10 * (partId + 1));
             req.parts.emplace(partId, std::move(vertices));
         }
 
@@ -42,19 +42,18 @@ TEST(DeleteVertexTest, SimpleTest) {
         auto resp = std::move(fut).get();
         EXPECT_EQ(0, resp.result.failed_codes.size());
 
-        for (PartitionID partId = 0; partId < 3; partId++) {
+        for (PartitionID partId = 1; partId <= 3; partId++) {
             for (VertexID vertexId = 10 * partId; vertexId < 10 * (partId + 1); vertexId++) {
                 auto prefix = NebulaKeyUtils::vertexPrefix(partId, vertexId);
                 std::unique_ptr<kvstore::KVIterator> iter;
                 EXPECT_EQ(kvstore::ResultCode::SUCCEEDED, kv->prefix(0, partId, prefix, &iter));
                 TagID tagId = 0;
                 while (iter->valid()) {
-                    EXPECT_EQ(folly::stringPrintf("%d_%ld_%d",
-                                                   partId, vertexId, tagId), iter->val());
+                    EXPECT_EQ(TestUtils::setupEncode(), iter->val());
                     tagId++;
                     iter->next();
                 }
-                EXPECT_EQ(10, tagId);
+                EXPECT_EQ(9, tagId);
             }
         }
     }

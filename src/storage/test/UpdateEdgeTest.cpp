@@ -104,17 +104,17 @@ TEST(UpdateEdgeTest, Set_Filter_Yield_Test) {
     req.set_edge_key(edgeKey);
     req.set_part_id(partId);
     LOG(INFO) << "Build filter...";
-    // left int: $^.3001.tag_3001_col_0 >= 0
+    // left int: $^.3001.col_0 >= 0
     auto* tag1 = new std::string("3001");
-    auto* prop1 = new std::string("tag_3001_col_0");
+    auto* prop1 = new std::string("col_0");
     auto* srcExp1 = new SourcePropertyExpression(tag1, prop1);
     auto* priExp1 = new PrimaryExpression(0L);
     auto* left = new RelationalExpression(srcExp1,
                                           RelationalExpression::Operator::GE,
                                           priExp1);
-    // right string: $^.3003.tag_3003_col_3 == tag_string_col_3_2;
+    // right string: $^.3003.col_3 == tag_string_col_3_2;
     auto* tag2 = new std::string("3003");
-    auto* prop2 = new std::string("tag_3003_col_3");
+    auto* prop2 = new std::string("col_3");
     auto* srcExp2 = new SourcePropertyExpression(tag2, prop2);
     std::string col3("tag_string_col_3_2");
     auto* priExp2 = new PrimaryExpression(col3);
@@ -148,7 +148,7 @@ TEST(UpdateEdgeTest, Set_Filter_Yield_Test) {
     tmpColumns.emplace_back(Expression::encode(&val1));
     tmpColumns.emplace_back(Expression::encode(&val2));
     SourcePropertyExpression sourcePropExp(new std::string(folly::to<std::string>(3002)),
-                                           new std::string("tag_3002_col_2"));
+                                           new std::string("col_2"));
     tmpColumns.emplace_back(Expression::encode(&sourcePropExp));
 
     req.set_return_columns(std::move(tmpColumns));
@@ -242,12 +242,12 @@ TEST(UpdateEdgeTest, Insertable_Test) {
     req.set_filter("");
     LOG(INFO) << "Build update items...";
     std::vector<cpp2::UpdateItem> items;
-    // int: 101.col_0 = $^.3002.tag_3002_col_2
+    // int: 101.col_0 = $^.3002.col_2
     cpp2::UpdateItem item1;
     item1.set_name("101");
     item1.set_prop("col_0");
     auto* tag3002 = new std::string("3002");
-    auto* propCol2 = new std::string("tag_3002_col_2");
+    auto* propCol2 = new std::string("col_2");
     SourcePropertyExpression val1(tag3002, propCol2);
     item1.set_value(Expression::encode(&val1));
     items.emplace_back(item1);

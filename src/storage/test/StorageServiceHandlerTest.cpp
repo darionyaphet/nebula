@@ -22,8 +22,8 @@ TEST(StorageServiceHandlerTest, FutureAddVerticesTest) {
     req.overwritable = true;
 
     LOG(INFO) << "Build FutureAddVerticesTest...";
-    req.parts.emplace(0, TestUtils::setupVertices(0, 0, 10, 0, 10));
-    req.parts.emplace(1, TestUtils::setupVertices(1, 0, 20, 0, 30));
+    req.parts.emplace(0, TestUtils::setupVertices(0,  10, 3001, 3010));
+    req.parts.emplace(1, TestUtils::setupVertices(10, 20, 3001, 3010));
     LOG(INFO) << "Test FutureAddVerticesTest...";
     std::unique_ptr<kvstore::KVStore> kvstore = TestUtils::initKV(rootPath.path());
     auto schemaMan = TestUtils::mockSchemaMan();
@@ -44,11 +44,11 @@ TEST(StorageServiceHandlerTest, FutureAddVerticesTest) {
     ASSERT_EQ(kvstore::ResultCode::SUCCEEDED, kvstore->prefix(0, 1, prefix, &iter));
     TagID tagId = 0;
     while (iter->valid()) {
-        ASSERT_EQ(folly::stringPrintf("%d_%d_%d", 1, 19, tagId), iter->val());
+        ASSERT_EQ(TestUtils::setupEncode(), iter->val());
         tagId++;
         iter->next();
     }
-    ASSERT_EQ(30, tagId);
+    ASSERT_EQ(9, tagId);
     LOG(INFO) << "Test FutureAddVerticesTest...";
 }
 }  // namespace storage

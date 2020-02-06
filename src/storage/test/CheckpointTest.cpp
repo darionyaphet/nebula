@@ -30,7 +30,7 @@ TEST(CheckpointTest, simpleTest) {
         req.overwritable = false;
         // partId => List<Vertex>
         for (PartitionID partId = 0; partId < 3; partId++) {
-            auto vertices = TestUtils::setupVertices(partId, 10, 10, 0, partId * 10);
+            auto vertices = TestUtils::setupVertices(10, 10, 0, partId * 10);
             req.parts.emplace(partId, std::move(vertices));
         }
 

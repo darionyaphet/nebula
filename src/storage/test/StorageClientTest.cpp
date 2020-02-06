@@ -118,7 +118,7 @@ TEST(StorageClientTest, VerticesInterfacesTest) {
         }
         for (int i = 0; i < 3; i++) {
             retCols.emplace_back(TestUtils::vertexPropDef(
-                folly::stringPrintf("tag_%d_col_%d", 3001 + i * 2, i * 2), 3001 + i * 2));
+                folly::stringPrintf("col_%d", i * 2), 3001 + i * 2));
         }
         auto f = client->getVertexProps(spaceId, std::move(vIds), std::move(retCols));
         auto resp = std::move(f).get();
@@ -151,10 +151,10 @@ TEST(StorageClientTest, VerticesInterfacesTest) {
 
             EXPECT_EQ(3, size);
 
-            checkTagData<int64_t>(vp.tag_data, 3001, "tag_3001_col_0", vschema, 0);
-            checkTagData<int64_t>(vp.tag_data, 3003, "tag_3003_col_2", vschema, 2);
-            checkTagData<std::string>(vp.tag_data, 3005, "tag_3005_col_4", vschema,
-                                      folly::stringPrintf("string_col_4"));
+            checkTagData<int64_t>(vp.tag_data, 3001, "col_0", vschema, 0);
+            checkTagData<int64_t>(vp.tag_data, 3003, "col_2", vschema, 2);
+            checkTagData<std::string>(vp.tag_data, 3005, "col_4", vschema,
+                                      folly::stringPrintf("col_4"));
         }
     }
 
@@ -220,7 +220,7 @@ TEST(StorageClientTest, VerticesInterfacesTest) {
                 } else if (index >= 14) {  // the last 10 STRING fields
                     folly::StringPiece stringCol;
                     EXPECT_EQ(ResultType::SUCCEEDED, fieldIt->getString(stringCol));
-                    EXPECT_EQ(folly::stringPrintf("string_col_%d", index - 4), stringCol);
+                    EXPECT_EQ(folly::stringPrintf("col_%d", index - 4), stringCol);
                 } else {  // the middle 10 INT fields
                     int32_t intCol;
                     EXPECT_EQ(ResultType::SUCCEEDED, fieldIt->getInt(intCol));
@@ -283,7 +283,7 @@ TEST(StorageClientTest, VerticesInterfacesTest) {
                 std::vector<VertexID> vIds{srcId};
                 std::vector<cpp2::PropDef> retCols;
                 retCols.emplace_back(
-                    TestUtils::vertexPropDef(folly::stringPrintf("tag_%d_col_%d", 3001, 0), 3001));
+                    TestUtils::vertexPropDef(folly::stringPrintf("col_%d", 0), 3001));
                 auto cf = client->getVertexProps(spaceId, std::move(vIds), std::move(retCols));
                 auto cresp = std::move(cf).get();
                 ASSERT_TRUE(cresp.succeeded());

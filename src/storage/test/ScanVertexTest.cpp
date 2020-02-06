@@ -105,14 +105,14 @@ cpp2::ScanVertexRequest buildRequest(PartitionID partId, const std::string& curs
                 cpp2::PropDef prop;
                 prop.owner = cpp2::PropOwner::SOURCE;
                 prop.id.set_tag_id(tagId);
-                prop.name = folly::stringPrintf("tag_%d_col_%d", tagId, 4);
+                prop.name = folly::stringPrintf("col_%d", 4);
                 props.emplace_back(std::move(prop));
             }
             {
                 cpp2::PropDef prop;
                 prop.owner = cpp2::PropOwner::SOURCE;
                 prop.id.set_tag_id(tagId);
-                prop.name = folly::stringPrintf("tag_%d_col_%d", tagId, 1);
+                prop.name = folly::stringPrintf("col_%d", 1);
                 props.emplace_back(std::move(prop));
             }
         } else {

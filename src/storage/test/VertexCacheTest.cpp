@@ -27,7 +27,7 @@ void addVertices(kvstore::KVStore* kv,  meta::SchemaManager* schemaMan,
     cpp2::AddVerticesRequest req;
     req.space_id = 0;
     req.overwritable = true;
-    auto vertices = TestUtils::setupVertices(0, 0, nums, 3001, 3002);
+    auto vertices = TestUtils::setupVertices(0, nums, 3001, 3002);
     req.parts.emplace(0, std::move(vertices));
 
     LOG(INFO) << "Test AddVerticesProcessor...";
@@ -49,14 +49,7 @@ void prepareData(kvstore::KVStore* kv) {
     TagID tagId = 3001;
     for (int32_t vertexId = 0; vertexId < 10000; vertexId++) {
         auto key = NebulaKeyUtils::vertexKey(0, vertexId, tagId, 0);
-        RowWriter writer;
-        for (int64_t numInt = 0; numInt < 3; numInt++) {
-            writer << numInt;
-        }
-        for (int32_t numString = 3; numString < 6; numString++) {
-            writer << folly::stringPrintf("tag_string_col_%d", numString);
-        }
-        auto val = writer.encode();
+        auto val = TestUtils::setupEncode();
         data.emplace_back(std::move(key), std::move(val));
     }
     folly::Baton<true, std::atomic> baton;
@@ -89,7 +82,7 @@ void fetchVertices(kvstore::KVStore* kv,
     TagID tagId = 3001;
     for (int i = 0; i < 3; i++) {
         tmpColumns.emplace_back(TestUtils::vertexPropDef(
-            folly::stringPrintf("tag_%d_col_%d", tagId, i * 2), tagId));
+            folly::stringPrintf("col_%d", i * 2), tagId));
     }
     req.set_return_columns(std::move(tmpColumns));
 
@@ -116,10 +109,10 @@ void fetchVertices(kvstore::KVStore* kv,
                                         return acc + it->second.columns.size();
                                     });
         EXPECT_EQ(3, size);
-        checkTagData<int64_t>(vp.tag_data, 3001, "tag_3001_col_0", vschema, 0);
-        checkTagData<int64_t>(vp.tag_data, 3001, "tag_3001_col_2", vschema, 2);
-        checkTagData<std::string>(vp.tag_data, 3001, "tag_3001_col_4", vschema,
-                                  folly::stringPrintf("tag_string_col_4"));
+        checkTagData<int64_t>(vp.tag_data, 3001, "col_0", vschema, 0);
+        checkTagData<int64_t>(vp.tag_data, 3001, "col_2", vschema, 2);
+        checkTagData<std::string>(vp.tag_data, 3001, "col_4", vschema,
+                                  folly::stringPrintf("col_4"));
     }
 }
 

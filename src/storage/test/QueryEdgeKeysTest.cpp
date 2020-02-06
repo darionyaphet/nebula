@@ -34,17 +34,7 @@ TEST(QueryEdgeKeysTest, SimpleTest) {
         // partId => List<Edge>
         // Edge => {EdgeKey, props}
         for (PartitionID partId = 1; partId <= 3; partId++) {
-            auto edges = TestUtils::setupEdges(partId, partId * 10, 10);
-            for (VertexID srcId = partId * 10; srcId < 10 * (partId + 1); srcId++) {
-                cpp2::EdgeKey key;
-                key.set_src(srcId);
-                key.set_edge_type(srcId * 100 + 1);
-                key.set_ranking(srcId * 100 + 2);
-                key.set_dst(srcId * 100 + 3);
-                edges.emplace_back();
-                edges.back().set_key(std::move(key));
-                edges.back().set_props(folly::stringPrintf("%d_%ld", partId, srcId));
-            }
+            auto edges = TestUtils::setupEdges(10 * partId, 10 * (partId + 1));
             req.parts.emplace(partId, std::move(edges));
         }
         auto fut = processor->getFuture();
@@ -56,12 +46,12 @@ TEST(QueryEdgeKeysTest, SimpleTest) {
     LOG(INFO) << "Check data in kv store...";
     for (PartitionID partId = 1; partId <= 3; partId++) {
         for (VertexID srcId = 10 * partId; srcId < 10 * (partId + 1); srcId++) {
-            auto prefix = NebulaKeyUtils::edgePrefix(partId, srcId, srcId * 100 + 1);
+            auto prefix = NebulaKeyUtils::edgePrefix(partId, srcId, 100 + 1);
             std::unique_ptr<kvstore::KVIterator> iter;
             EXPECT_EQ(kvstore::ResultCode::SUCCEEDED, kv->prefix(0, partId, prefix, &iter));
             int num = 0;
             while (iter->valid()) {
-                EXPECT_EQ(folly::stringPrintf("%d_%ld", partId, srcId), iter->val());
+                EXPECT_EQ(TestUtils::setupEncode(10, 20), iter->val());
                 num++;
                 iter->next();
             }
@@ -86,9 +76,9 @@ TEST(QueryEdgeKeysTest, SimpleTest) {
                 CHECK_EQ(1, resp.edge_keys.size());
                 auto edge = resp.edge_keys[0];
                 CHECK_EQ(srcId, edge.get_src());
-                CHECK_EQ(srcId * 100 + 1, edge.get_edge_type());
+                CHECK_EQ(100 + 1, edge.get_edge_type());
                 CHECK_EQ(srcId * 100 + 2, edge.get_ranking());
-                CHECK_EQ(srcId * 100 + 3, edge.get_dst());
+                CHECK_EQ(srcId + 3, edge.get_dst());
             }
         }
     }

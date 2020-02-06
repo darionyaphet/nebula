@@ -73,7 +73,7 @@ void buildRequest(cpp2::GetNeighborsRequest& req) {
     decltype(req.return_columns) tmpColumns;
     for (int i = 0; i < 2; i++) {
         tmpColumns.emplace_back(
-            TestUtils::vertexPropDef(folly::stringPrintf("tag_%d_col_%d", 3001 + i * 2, i * 2),
+            TestUtils::vertexPropDef(folly::stringPrintf("col_%d", i * 2),
                                     cpp2::StatType::AVG, 3001 + i * 2));
     }
     // Return edge props col_0, col_2, col_4 ... col_18
@@ -94,8 +94,8 @@ void checkResponse(const cpp2::QueryStatsResponse& resp) {
     LOG(INFO) << "Check edge props...";
 
     std::vector<std::tuple<std::string, nebula::cpp2::SupportedType, int32_t>> expected;
-    expected.emplace_back("tag_3001_col_0", nebula::cpp2::SupportedType::DOUBLE, 0);
-    expected.emplace_back("tag_3003_col_2", nebula::cpp2::SupportedType::DOUBLE, 2);
+    expected.emplace_back("col_0", nebula::cpp2::SupportedType::DOUBLE, 0);
+    expected.emplace_back("col_2", nebula::cpp2::SupportedType::DOUBLE, 2);
     expected.emplace_back("col_0", nebula::cpp2::SupportedType::INT, 0);
     expected.emplace_back("col_2", nebula::cpp2::SupportedType::INT, 2);
     expected.emplace_back("col_4", nebula::cpp2::SupportedType::INT, 4);

@@ -98,10 +98,11 @@ StatusOr<std::vector<storage::cpp2::Edge>> InsertEdgeExecutor::prepareEdges() {
     auto space = ectx()->rctx()->session()->space();
     expCtx_->setSpace(space);
 
+    std::shared_ptr<EdgeTypeCache> cache = std::make_shared<EdgeTypeCache>();
     std::vector<storage::cpp2::Edge> edges(rows_.size() * 2);   // inbound and outbound
     auto index = 0;
     Getters getters;
-    for (auto i = 0u; i < rows_.size(); i++) {
+    for (int32_t i = rows_.size() - 1; i >= 0; i--) {
         auto *row = rows_[i];
         auto sid = row->srcid();
         sid->setContext(expCtx_.get());
@@ -138,6 +139,13 @@ StatusOr<std::vector<storage::cpp2::Edge>> InsertEdgeExecutor::prepareEdges() {
         auto dst = Expression::asInt(v);
 
         int64_t rank = row->rank();
+        auto cacheKey = std::make_tuple(edgeType_, src, dst, rank);
+        auto cacheIter = cache->find(cacheKey);
+        if (cacheIter == cache->end()) {
+            cache->emplace(std::move(cacheKey));
+        } else {
+            continue;
+        }
 
         auto expressions = row->values();
 

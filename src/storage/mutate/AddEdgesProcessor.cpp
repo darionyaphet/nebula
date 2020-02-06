@@ -34,7 +34,7 @@ void AddEdgesProcessor::process(const cpp2::AddEdgesRequest& req) {
         if (indexes_.empty()) {
             std::vector<kvstore::KV> data;
             std::for_each(edges.begin(), edges.end(), [&](auto& edge) {
-                VLOG(3) << "PartitionID: " << partId << ", VertexID: " << edge.key.src
+                LOG(INFO) << "PartitionID: " << partId << ", VertexID: " << edge.key.src
                         << ", EdgeType: " << edge.key.edge_type
                         << ", EdgeRanking: " << edge.key.ranking
                         << ", VertexID: " << edge.key.dst
@@ -43,6 +43,7 @@ void AddEdgesProcessor::process(const cpp2::AddEdgesRequest& req) {
                                                    edge.key.ranking, edge.key.dst, version);
                 data.emplace_back(std::move(key), std::move(edge.get_props()));
             });
+            doPut(spaceId_, partId, std::move(data));
         } else {
             auto atomic = [version, partId, edges = std::move(edges), this]() -> std::string {
                 return addEdges(version, partId, edges);
@@ -77,14 +78,20 @@ std::string AddEdgesProcessor::addEdges(int64_t version, PartitionID partId,
         bool updated = false;
         if (!FLAGS_ignore_index_check_pre_insert) {
             auto original = findOriginalValue(partId, key);
-            if (original.ok()) {
+            if (original.ok() && !original.value().empty()) {
                 auto originalReader = RowReader::getEdgePropReader(this->schemaMan_,
                                                                    original.value(),
                                                                    spaceId_,
                                                                    type);
                 for (auto& index : indexes_) {
-                    auto originalIndexKey = makeIndexKey(partId, originalReader.get(), original.value(), index);
-                    auto newIndexKey = makeIndexKey(partId, newReader.get(), prop, index);
+                    if (type != index->get_schema_id().get_edge_type()) {
+                        continue;
+                    }
+                    auto originalIndexKey = makeIndexKey(partId,
+                                                         originalReader.get(),
+                                                         key,
+                                                         index);
+                    auto newIndexKey = makeIndexKey(partId, newReader.get(), key, index);
                     if (!originalIndexKey.empty() &&
                         originalIndexKey != newIndexKey) {
                         batchHolder->remove(std::move(originalIndexKey));
@@ -97,7 +104,10 @@ std::string AddEdgesProcessor::addEdges(int64_t version, PartitionID partId,
 
         if (!updated) {
             for (auto& index : indexes_) {
-                auto newIndexKey = makeIndexKey(partId, newReader.get(), prop, index);
+                if (type != index->get_schema_id().get_edge_type()) {
+                    continue;
+                }
+                auto newIndexKey = makeIndexKey(partId, newReader.get(), key, index);
                 batchHolder->put(std::move(newIndexKey), "");
             }
         }
@@ -123,7 +133,7 @@ StatusOr<std::string> AddEdgesProcessor::findOriginalValue(PartitionID partId,
     if (iter && iter->valid()) {
         return iter->val().str();
     }
-    return Status::EdgeNotFound();
+    return "";
 }
 
 std::string AddEdgesProcessor::makeIndexKey(PartitionID partId,
