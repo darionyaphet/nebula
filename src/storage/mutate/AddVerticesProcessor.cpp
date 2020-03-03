@@ -26,7 +26,7 @@ void AddVerticesProcessor::process(const cpp2::AddVerticesRequest& req) {
     callingNum_ = req.get_parts().size();
     auto iRet = indexMan_->getTagIndexes(spaceId_);
     if (iRet.ok()) {
-        indexes_ = iRet.value();
+        indexes_ = std::move(iRet).value();
     }
 
     std::for_each(req.get_parts().begin(), req.get_parts().end(), [&](auto& partVertices) {

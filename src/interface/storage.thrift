@@ -48,6 +48,9 @@ enum ErrorCode {
     E_FAILED_TO_CHECKPOINT = -50,
     E_CHECKPOINT_BLOCKED = -51,
 
+    // index failed
+    E_INDEX_NOT_FOUND = -60,
+
     E_UNKNOWN = -100,
 } (cpp.enum_strict)
 
@@ -71,8 +74,8 @@ union EntryId {
 struct PropDef {
     1: PropOwner owner,
     2: EntryId   id,
-    3: string name,      // Property name
-    4: StatType stat,    // calc stats when setted.
+    3: string    name,    // Property name
+    4: StatType  stat,    // calc stats when setted.
 }
 
 enum StatType {
@@ -123,6 +126,11 @@ struct VertexData {
     3: list<EdgeData>        edge_data,
 }
 
+struct VertexIndexData {
+    1: common.VertexID       vertex_id,
+    2: binary                props,
+}
+
 struct ResponseCommon {
     // Only contains the partition that returns error
     1: required list<ResultCode> failed_codes,
@@ -154,11 +162,6 @@ struct QueryStatsResponse {
     3: optional binary data,
 }
 
-struct EdgeKeyResponse {
-    1: required ResponseCommon result,
-    2: optional list<EdgeKey> edge_keys,      // out-edges and in-edges
-}
-
 struct Tag {
     1: common.TagID tag_id,
     2: binary props,
@@ -168,6 +171,7 @@ struct Vertex {
     1: common.VertexID id,
     2: list<Tag> tags,
 }
+
 struct GetNeighborsRequest {
     1: common.GraphSpaceID space_id,
     // partId => ids
@@ -209,16 +213,19 @@ struct AddEdgesRequest {
     3: bool overwritable,
 }
 
-struct EdgeKeyRequest {
+struct EdgeKeysRequest {
     1: common.GraphSpaceID space_id,
-    2: common.PartitionID part_id,
-    3: common.VertexID vid,
+    2: map<common.PartitionID, list<common.VertexID>>(cpp.template = "std::unordered_map") parts,
 }
 
-struct DeleteVertexRequest {
-    1: common.GraphSpaceID      space_id,
-    2: common.PartitionID       part_id,
-    3: common.VertexID          vid;
+struct EdgeKeysResponse {
+    1: required ResponseCommon result,
+    2: optional map<common.VertexID, list<EdgeKey>>(cpp.template = "std::unordered_map") edge_keys,
+}
+
+struct DeleteVerticesRequest {
+    1: common.GraphSpaceID space_id,
+    2: map<common.PartitionID, list<common.VertexID>>(cpp.template = "std::unordered_map") parts,
 }
 
 struct DeleteEdgesRequest {
@@ -433,6 +440,26 @@ struct DropCPRequest {
     2: string                       name,
 }
 
+struct LookUpVertexIndexResp {
+    1: required ResponseCommon             result,
+    2: optional common.Schema              schema,
+    3: optional list<VertexIndexData>      rows,
+}
+
+struct LookUpEdgeIndexResp {
+    1: required ResponseCommon             result,
+    2: optional common.Schema              schema,
+    3: optional list<Edge>                 rows,
+}
+
+struct LookUpIndexRequest {
+    1: common.GraphSpaceID       space_id,
+    2: list<common.PartitionID>  parts,
+    3: common.IndexID            index_id,
+    4: binary                    filter,
+    5: list<string>              return_columns,
+}
+
 service StorageService {
     QueryResponse getBound(1: GetNeighborsRequest req)
 
@@ -445,9 +472,9 @@ service StorageService {
     ExecResponse addVertices(1: AddVerticesRequest req);
     ExecResponse addEdges(1: AddEdgesRequest req);
 
-    EdgeKeyResponse getEdgeKeys(1: EdgeKeyRequest req);
+    EdgeKeysResponse getEdgeKeys(1: EdgeKeysRequest req);
     ExecResponse deleteEdges(1: DeleteEdgesRequest req);
-    ExecResponse deleteVertex(1: DeleteVertexRequest req);
+    ExecResponse deleteVertices(1: DeleteVerticesRequest req);
 
     UpdateResponse updateVertex(1: UpdateVertexRequest req)
     UpdateResponse updateEdge(1: UpdateEdgeRequest req)
@@ -477,4 +504,8 @@ service StorageService {
     ExecResponse      removeRange(1: RemoveRangeRequest req);
 
     GetUUIDResp getUUID(1: GetUUIDReq req);
+
+    // Interfaces for edge and vertex index scan
+    LookUpVertexIndexResp lookUpVertexIndex(1: LookUpIndexRequest req);
+    LookUpEdgeIndexResp   lookUpEdgeIndex(1: LookUpIndexRequest req);
 }

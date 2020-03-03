@@ -24,7 +24,7 @@ void AddEdgesProcessor::process(const cpp2::AddEdgesRequest& req) {
     callingNum_ = req.get_parts().size();
     auto iRet = indexMan_->getEdgeIndexes(spaceId_);
     if (iRet.ok()) {
-        indexes_ = iRet.value();
+        indexes_ = std::move(iRet).value();
     }
 
     std::for_each(req.get_parts().begin(), req.get_parts().end(), [&](auto& partEdges) {
@@ -34,7 +34,7 @@ void AddEdgesProcessor::process(const cpp2::AddEdgesRequest& req) {
         if (indexes_.empty()) {
             std::vector<kvstore::KV> data;
             std::for_each(edges.begin(), edges.end(), [&](auto& edge) {
-                LOG(INFO) << "PartitionID: " << partId << ", VertexID: " << edge.key.src
+                VLOG(3) << "PartitionID: " << partId << ", VertexID: " << edge.key.src
                         << ", EdgeType: " << edge.key.edge_type
                         << ", EdgeRanking: " << edge.key.ranking
                         << ", VertexID: " << edge.key.dst

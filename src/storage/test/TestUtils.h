@@ -18,6 +18,7 @@
 #include "meta/IndexManager.h"
 #include "meta/SchemaProviderIf.h"
 #include "dataman/ResultSchemaProvider.h"
+#include "meta/NebulaSchemaProvider.h"
 #include "storage/StorageServiceHandler.h"
 #include <thrift/lib/cpp2/server/ThriftServer.h>
 #include <folly/synchronization/Baton.h>
@@ -88,6 +89,17 @@ public:
         for (EdgeType edgeType = 101; edgeType < 110; edgeType++) {
             schemaMan->addEdgeSchema(spaceId, edgeType, TestUtils::genSchemaProvider(10, 10));
         }
+        return schemaMan;
+    }
+
+    static std::unique_ptr<AdHocSchemaManager> mockSchemaWithTTLMan(GraphSpaceID spaceId = 0) {
+        auto schemaMan = std::make_unique<AdHocSchemaManager>();
+        auto tagId = 3001;
+        schemaMan->addTagSchema(spaceId,
+                                tagId,
+                                TestUtils::genSchemaProvider(3, 3, 200));
+
+        schemaMan->addEdgeSchema(spaceId, 101, TestUtils::genSchemaProvider(10, 10, 200));
         return schemaMan;
     }
 
@@ -227,26 +239,32 @@ public:
         return writer.encode();
     }
 
-
     /**
-     * It will generate SchemaProvider with some int fields and string fields
+     * It will generate edge SchemaProvider with some int fields and string fields
      * */
     static std::shared_ptr<meta::SchemaProviderIf>
-    genSchemaProvider(int32_t intFieldsNum, int32_t stringFieldsNum) {
-        nebula::cpp2::Schema schema;
+    genSchemaProvider(int32_t intFieldsNum, int32_t stringFieldsNum, int32_t ttl = 0) {
+        std::shared_ptr<meta::NebulaSchemaProvider> schema(new meta::NebulaSchemaProvider(0));
         for (int32_t i = 0; i < intFieldsNum; i++) {
             nebula::cpp2::ColumnDef column;
             column.name = folly::stringPrintf("col_%d", i);
             column.type.type = nebula::cpp2::SupportedType::INT;
-            schema.columns.emplace_back(std::move(column));
+            schema->addField(column.name, std::move(column.type));
         }
         for (int32_t i = intFieldsNum; i < intFieldsNum + stringFieldsNum; i++) {
             nebula::cpp2::ColumnDef column;
             column.name = folly::stringPrintf("col_%d", i);
             column.type.type = nebula::cpp2::SupportedType::STRING;
-            schema.columns.emplace_back(std::move(column));
+            schema->addField(column.name, std::move(column.type));
         }
-        return std::make_shared<ResultSchemaProvider>(std::move(schema));
+
+        if (ttl != 0) {
+            nebula::cpp2::SchemaProp prop;
+            prop.set_ttl_duration(ttl);
+            prop.set_ttl_col(folly::stringPrintf("col_0"));
+            schema->setProp(prop);
+        }
+        return schema;
     }
 
     static cpp2::PropDef vertexPropDef(std::string name, TagID tagId) {
