@@ -37,7 +37,7 @@ TEST(LogEncoderTest, SingleValueTest) {
 TEST(LogEncoderTest, MultiValuesTest) {
     // Empty values
     {
-        std::vector<std::string> values;
+        folly::fbvector<std::string> values;
         auto encoded = encodeMultiValues(OP_MULTI_REMOVE, values);
         ASSERT_EQ(1 + sizeof(uint32_t) + sizeof(int64_t), encoded.size());
 
@@ -47,7 +47,7 @@ TEST(LogEncoderTest, MultiValuesTest) {
 
     // Multi values
     {
-        std::vector<std::string> values;
+        folly::fbvector<std::string> values;
         // 3 values
         for (int i = 0; i < 3; i++) {
             values.emplace_back(folly::stringPrintf("Value%03d", i));
@@ -88,7 +88,7 @@ TEST(LogEncoderTest, MultiValuesTest) {
 
     // Multi pairs
     {
-        std::vector<KV> kvs;
+        folly::fbvector<KV> kvs;
         // 2 pairs
         for (int i = 0; i < 2; i++) {
             kvs.emplace_back(folly::stringPrintf("Key%03d", i),

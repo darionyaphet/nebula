@@ -85,7 +85,7 @@ void CreateTagIndexProcessor::process(const cpp2::CreateTagIndexReq& req) {
         }
     }
 
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     auto tagIndexRet = autoIncrementId();
     if (!nebula::ok(tagIndexRet)) {
         LOG(ERROR) << "Create tag index failed : Get tag index ID failed";

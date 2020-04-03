@@ -21,7 +21,7 @@ void mockData(kvstore::KVStore* kv, int32_t partCount = 10) {
     // we have 10srcId * 10dstId * 10part = 1000 edges of one edgeType,
     // and 10vId * 9tagId * 10part = 900 tags
     for (auto partId = 0; partId < partCount; partId++) {
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         for (auto vertexId = partId * 10; vertexId < (partId + 1) * 10; vertexId++) {
             // Generate 9 tag for each vertex
             for (auto tagId = 3001; tagId < 3010; tagId++) {

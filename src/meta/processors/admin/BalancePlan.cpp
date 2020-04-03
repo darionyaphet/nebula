@@ -121,7 +121,7 @@ void BalancePlan::invoke() {
 
 cpp2::ErrorCode BalancePlan::saveInStore(bool onlyPlan) {
     if (kv_) {
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         data.emplace_back(planKey(), planVal());
         if (!onlyPlan) {
             for (auto& task : tasks_) {

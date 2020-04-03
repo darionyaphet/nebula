@@ -24,7 +24,7 @@ void mockData(kvstore::KVStore* kv,
     auto spaceId = 0;
     auto schema = schemaMng->getEdgeSchema(spaceId, edgeType);
     for (PartitionID partId = 0; partId < 3; partId++) {
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         for (VertexID vertexId = partId * 10; vertexId < (partId + 1) * 10; vertexId++) {
             // Generate 7 edges for each source vertex id
             for (VertexID dstId = 10001; dstId <= 10007; dstId++) {
@@ -287,7 +287,7 @@ TEST(QueryEdgePropsTest, QueryAfterEdgeAltered) {
         LOG(INFO) << "Now update data with new edge prop";
         auto edgeType = 101;
         for (auto partId = 0; partId < 3; partId++) {
-            std::vector<kvstore::KV> data;
+            folly::fbvector<kvstore::KV> data;
             for (auto vertexId = partId * 10; vertexId < (partId + 1) * 10; vertexId++) {
                 // Generate 7 edges for each source vertex id
                 for (auto dstId = 10001; dstId <= 10007; dstId++) {

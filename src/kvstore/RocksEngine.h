@@ -119,7 +119,7 @@ public:
      ********************/
     ResultCode get(const std::string& key, std::string* value) override;
 
-    std::vector<Status> multiGet(const std::vector<std::string>& keys,
+    std::vector<Status> multiGet(const folly::fbvector<std::string>& keys,
                                  std::vector<std::string>* values) override;
 
     ResultCode range(const std::string& start,
@@ -138,11 +138,11 @@ public:
      ********************/
     ResultCode put(std::string key, std::string value) override;
 
-    ResultCode multiPut(std::vector<KV> keyValues) override;
+    ResultCode multiPut(folly::fbvector<KV> keyValues) override;
 
     ResultCode remove(const std::string& key) override;
 
-    ResultCode multiRemove(std::vector<std::string> keys) override;
+    ResultCode multiRemove(folly::fbvector<std::string> keys) override;
 
     ResultCode removeRange(const std::string& start,
                            const std::string& end) override;

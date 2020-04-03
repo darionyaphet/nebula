@@ -207,7 +207,7 @@ folly::Future<Status> AdminClient::updateMeta(GraphSpaceID spaceId,
 
     folly::Promise<Status> pro;
     auto f = pro.getFuture();
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(MetaServiceUtils::partKey(spaceId, partId),
                       MetaServiceUtils::partVal(thriftPeers));
     part->asyncMultiPut(std::move(data), [] (kvstore::ResultCode) {});

@@ -10,7 +10,7 @@ namespace nebula {
 namespace meta {
 
 void MultiGetProcessor::process(const cpp2::MultiGetReq& req) {
-    std::vector<std::string> keys;
+    folly::fbvector<std::string> keys;
     for (auto& key : req.get_keys()) {
         keys.emplace_back(MetaServiceUtils::assembleSegmentKey(req.get_segment(), key));
     }

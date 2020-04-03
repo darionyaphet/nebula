@@ -42,7 +42,7 @@ void RebuildTagIndexProcessor::process(const cpp2::RebuildIndexRequest& req) {
                 return;
             }
 
-            std::vector<kvstore::KV> data;
+            folly::fbvector<kvstore::KV> data;
             data.reserve(FLAGS_rebuild_index_batch_num);
             int32_t batchNum = 0;
             VertexID currentVertex = -1;

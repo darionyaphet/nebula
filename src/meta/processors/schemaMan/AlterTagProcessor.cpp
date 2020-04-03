@@ -89,7 +89,7 @@ void AlterTagProcessor::process(const cpp2::AlterTagReq& req) {
     }
     schema.set_columns(std::move(columns));
 
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     LOG(INFO) << "Alter Tag " << req.get_tag_name() << ", tagId " << tagId;
     data.emplace_back(MetaServiceUtils::schemaTagKey(spaceId, tagId, version),
                       MetaServiceUtils::schemaTagVal(req.get_tag_name(), schema));

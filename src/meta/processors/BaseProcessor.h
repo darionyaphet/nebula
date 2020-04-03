@@ -120,7 +120,7 @@ protected:
     /**
      * General put function.
      * */
-    void doPut(std::vector<kvstore::KV> data);
+    void doPut(folly::fbvector<kvstore::KV> data);
 
     StatusOr<std::unique_ptr<kvstore::KVIterator>> doPrefix(const std::string& key);
 
@@ -132,7 +132,7 @@ protected:
     /**
      * General multi get function.
      * */
-    StatusOr<std::vector<std::string>> doMultiGet(const std::vector<std::string>& keys);
+    StatusOr<std::vector<std::string>> doMultiGet(const folly::fbvector<std::string>& keys);
 
     /**
      * General remove function.
@@ -152,7 +152,7 @@ protected:
      /**
      * General multi remove function.
      **/
-     void doMultiRemove(std::vector<std::string> keys);
+     void doMultiRemove(folly::fbvector<std::string> keys);
 
     /**
      * Get all hosts
@@ -228,11 +228,11 @@ protected:
 
     bool checkPassword(const std::string& account, const std::string& password);
 
-    kvstore::ResultCode doSyncPut(std::vector<kvstore::KV> data);
+    kvstore::ResultCode doSyncPut(folly::fbvector<kvstore::KV> data);
 
-    void doSyncPutAndUpdate(std::vector<kvstore::KV> data);
+    void doSyncPutAndUpdate(folly::fbvector<kvstore::KV> data);
 
-    void doSyncMultiRemoveAndUpdate(std::vector<std::string> keys);
+    void doSyncMultiRemoveAndUpdate(folly::fbvector<std::string> keys);
 
     /**
      * check if the edge or tag contains indexes when alter edge or tag.

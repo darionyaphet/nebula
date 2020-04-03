@@ -88,7 +88,7 @@ void CreateEdgeIndexProcessor::process(const cpp2::CreateEdgeIndexReq& req) {
         }
     }
 
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     auto edgeIndexRet = autoIncrementId();
     if (!nebula::ok(edgeIndexRet)) {
         LOG(ERROR) << "Create edge index failed: Get edge index ID failed";

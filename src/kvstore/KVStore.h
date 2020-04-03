@@ -85,7 +85,7 @@ public:
     virtual std::pair<ResultCode, std::vector<Status>>
     multiGet(GraphSpaceID spaceId,
              PartitionID partId,
-             const std::vector<std::string>& keys,
+             const folly::fbvector<std::string>& keys,
              std::vector<std::string>* values) = 0;
 
     // Get all results in range [start, end)
@@ -135,7 +135,7 @@ public:
 
     virtual void asyncMultiPut(GraphSpaceID spaceId,
                                PartitionID  partId,
-                               std::vector<KV> keyValues,
+                               folly::fbvector<KV> keyValues,
                                KVCallback cb) = 0;
 
     // Asynchronous version of remove methods
@@ -146,7 +146,7 @@ public:
 
     virtual void asyncMultiRemove(GraphSpaceID spaceId,
                                   PartitionID partId,
-                                  std::vector<std::string> keys,
+                                  folly::fbvector<std::string> keys,
                                   KVCallback cb) = 0;
 
     virtual void asyncRemoveRange(GraphSpaceID spaceId,

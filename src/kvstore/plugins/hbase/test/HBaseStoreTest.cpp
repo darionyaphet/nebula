@@ -38,8 +38,8 @@ TEST(HBaseStoreTest, SimpleTest) {
     EdgeType edgeType = 101;
     EdgeRanking rank = 10L;
     EdgeVersion edgeVersion = 0L;
-    std::vector<std::string> edgeKeys;
-    std::vector<KV> edgeData;
+    folly::fbvector<std::string> edgeKeys;
+    folly::fbvector<KV> edgeData;
     auto edgeScheam = sm->getEdgeSchema(spaceId, edgeType, edgeVersion);
     for (auto vertexId = srcId; vertexId < dstId; vertexId++) {
         auto edgeKey = NebulaKeyUtils::edgeKey(partId, srcId, edgeType,

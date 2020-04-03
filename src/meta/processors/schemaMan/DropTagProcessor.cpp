@@ -53,8 +53,8 @@ void DropTagProcessor::process(const cpp2::DropTagReq& req) {
     doSyncMultiRemoveAndUpdate(std::move(keys));
 }
 
-StatusOr<std::vector<std::string>> DropTagProcessor::getTagKeys(GraphSpaceID id, TagID tagId) {
-    std::vector<std::string> keys;
+StatusOr<folly::fbvector<std::string>> DropTagProcessor::getTagKeys(GraphSpaceID id, TagID tagId) {
+    folly::fbvector<std::string> keys;
     auto key = MetaServiceUtils::schemaTagPrefix(id, tagId);
     auto iterRet = doPrefix(key);
     if (!iterRet.ok()) {

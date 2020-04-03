@@ -45,7 +45,7 @@ void checkCache(VertexCache* cache, uint64_t evicts, uint64_t hits, uint64_t tot
 
 void prepareData(kvstore::KVStore* kv) {
     LOG(INFO) << "Prepare data...";
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     TagID tagId = 3001;
     for (int32_t vertexId = 0; vertexId < 10000; vertexId++) {
         auto key = NebulaKeyUtils::vertexKey(0, vertexId, tagId, 0);

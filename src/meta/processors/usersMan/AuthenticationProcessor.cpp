@@ -28,7 +28,7 @@ void CreateUserProcessor::process(const cpp2::CreateUserReq& req) {
         return;
     }
 
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(MetaServiceUtils::userKey(account),
                       MetaServiceUtils::userVal(password));
     handleErrorCode(cpp2::ErrorCode::SUCCEEDED);
@@ -49,7 +49,7 @@ void AlterUserProcessor::process(const cpp2::AlterUserReq& req) {
         onFinished();
         return;
     }
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(std::move(userKey), std::move(userVal));
     handleErrorCode(cpp2::ErrorCode::SUCCEEDED);
     doSyncPutAndUpdate(std::move(data));
@@ -70,7 +70,7 @@ void DropUserProcessor::process(const cpp2::DropUserReq& req) {
         onFinished();
         return;
     }
-    std::vector<std::string> keys;
+    folly::fbvector<std::string> keys;
     keys.emplace_back(MetaServiceUtils::userKey(account));
 
     // Collect related roles by user.
@@ -106,7 +106,7 @@ void GrantProcessor::process(const cpp2::GrantRoleReq& req) {
         return;
     }
 
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(MetaServiceUtils::roleKey(spaceId, roleItem.get_user()),
                       MetaServiceUtils::roleVal(roleItem.get_role_type()));
     handleErrorCode(cpp2::ErrorCode::SUCCEEDED);
@@ -162,7 +162,7 @@ void ChangePasswordProcessor::process(const cpp2::ChangePasswordReq& req) {
 
     auto userKey = MetaServiceUtils::userKey(req.get_account());
     auto userVal = MetaServiceUtils::userVal(req.get_new_encoded_pwd());
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(std::move(userKey), std::move(userVal));
     handleErrorCode(cpp2::ErrorCode::SUCCEEDED);
     doSyncPutAndUpdate(std::move(data));

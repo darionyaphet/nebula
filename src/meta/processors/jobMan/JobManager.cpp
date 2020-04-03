@@ -211,7 +211,7 @@ JobManager::showJobs() {
     }
 
     int32_t lastExpiredJobId = INT_MIN;
-    std::vector<std::string> expiredJobKeys;
+    folly::fbvector<std::string> expiredJobKeys;
     std::vector<cpp2::JobDesc> ret;
     for (; iter->valid(); iter->next()) {
         if (JobDescription::isJobKey(iter->key())) {
@@ -248,7 +248,7 @@ bool JobManager::isExpiredJob(const cpp2::JobDesc& jobDesc) {
     return duration > FLAGS_job_expired_secs;
 }
 
-void JobManager::removeExpiredJobs(const std::vector<std::string>& expiredJobsAndTasks) {
+void JobManager::removeExpiredJobs(const folly::fbvector<std::string>& expiredJobsAndTasks) {
     folly::Baton<true, std::atomic> baton;
     kvStore_->asyncMultiRemove(kDefaultSpaceId, kDefaultPartId, expiredJobsAndTasks,
         [&](nebula::kvstore::ResultCode code){
@@ -324,7 +324,7 @@ ErrorOr<ResultCode, int32_t> JobManager::recoverJob() {
 }
 
 ResultCode JobManager::save(const std::string& k, const std::string& v) {
-    std::vector<kvstore::KV> data{std::make_pair(k, v)};
+    folly::fbvector<kvstore::KV> data{std::make_pair(k, v)};
     folly::Baton<true, std::atomic> baton;
     nebula::kvstore::ResultCode rc = nebula::kvstore::SUCCEEDED;
     kvStore_->asyncMultiPut(kDefaultSpaceId, kDefaultPartId, std::move(data),

@@ -110,7 +110,7 @@ std::string genVertexProp(int64_t vId) {
 bool genData(kvstore::KVStore* kv,
              meta::SchemaManager* schemaMan,
              std::shared_ptr<nebula::cpp2::IndexItem> &index) {
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     for (auto i = 0; i < FLAGS_total_vertices_size; i++) {
         auto val = genVertexProp(i);
         auto indexKey = genVertexIndexKey(schemaMan, val, index, i);

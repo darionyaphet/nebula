@@ -25,7 +25,7 @@ void DeleteVerticesProcessor::process(const cpp2::DeleteVerticesRequest& req) {
             this->callingNum_ += pv.second.size();
         });
 
-        std::vector<std::string> keys;
+        folly::fbvector<std::string> keys;
         keys.reserve(32);
         for (auto pv = partVertices.begin(); pv != partVertices.end(); pv++) {
             auto part = pv->first;

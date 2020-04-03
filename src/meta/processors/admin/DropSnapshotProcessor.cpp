@@ -38,7 +38,7 @@ void DropSnapshotProcessor::process(const cpp2::DropSnapshotReq& req) {
         return;
     }
 
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     auto peers = peersRet.value();
     auto dsRet = Snapshot::instance(kvstore_, client_)->dropSnapshot(snapshot, std::move(peers));
     if (dsRet != cpp2::ErrorCode::SUCCEEDED) {

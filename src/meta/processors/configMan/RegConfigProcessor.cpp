@@ -10,7 +10,7 @@ namespace nebula {
 namespace meta {
 
 void RegConfigProcessor::process(const cpp2::RegConfigReq& req) {
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     {
         folly::SharedMutex::WriteHolder wHolder(LockUtils::configLock());
         for (const auto& item : req.get_items()) {

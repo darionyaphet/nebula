@@ -27,7 +27,7 @@ void DropEdgeIndexProcessor::process(const cpp2::DropEdgeIndexReq& req) {
         return;
     }
 
-    std::vector<std::string> keys;
+    folly::fbvector<std::string> keys;
     keys.emplace_back(MetaServiceUtils::indexIndexKey(spaceID, indexName));
     keys.emplace_back(MetaServiceUtils::indexKey(spaceID, edgeIndexID.value()));
 

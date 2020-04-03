@@ -20,7 +20,7 @@ namespace storage {
 
 void mockData(kvstore::KVStore* kv) {
     LOG(INFO) << "Prepare data...";
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     for (int32_t partId = 0; partId < 3; partId++) {
         for (int32_t vertexId = partId * 10; vertexId < (partId + 1) * 10; vertexId++) {
             // NOTE: the range of tagId is [3001, 3008], excluding 3009(for insert test).
@@ -161,7 +161,7 @@ TEST(UpdateVertexTest, Set_Filter_Yield_Test) {
         }
     }
     // get tag3001, tag3003 and tag3005 from kvstore directly
-    std::vector<std::string> keys;
+    folly::fbvector<std::string> keys;
     std::vector<std::string> values;
     auto lastVersion = std::numeric_limits<int32_t>::max() - 2;
     for (int i = 0; i < 3; i++) {
@@ -418,7 +418,7 @@ TEST(UpdateVertexTest, CorruptDataTest) {
 
     // partId, srcId, tagId, version
     auto key = NebulaKeyUtils::vertexKey(0, 10, 3001, 0);
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(std::make_pair(key, ""));
     folly::Baton<> baton;
     kv->asyncMultiPut(0, 0, std::move(data),

@@ -41,7 +41,7 @@ public:
         auto roleKey = MetaServiceUtils::roleKey(kDefaultSpaceId, "root");
         auto roleVal = MetaServiceUtils::roleVal(nebula::cpp2::RoleType::GOD);
 
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         data.emplace_back(std::move(userKey), std::move(userVal));
         data.emplace_back(std::move(roleKey), std::move(roleVal));
         bool ret = true;

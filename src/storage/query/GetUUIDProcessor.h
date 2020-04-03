@@ -41,7 +41,7 @@ public:
             auto now = time::WallClock::fastNowInSec();
             vId = (hashValue & hashMask) | (now & timeMask);
             val.append(reinterpret_cast<char*>(&vId), sizeof(VertexID));
-            std::vector<kvstore::KV> data;
+            folly::fbvector<kvstore::KV> data;
             data.emplace_back(std::move(key), std::move(val));
 
             kvstore_->asyncMultiPut(spaceId, partId, std::move(data),

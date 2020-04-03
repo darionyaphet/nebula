@@ -227,7 +227,7 @@ ResultCode HBaseStore::sync(GraphSpaceID spaceId, PartitionID partId) {
 }
 
 ResultCode HBaseStore::multiRemove(GraphSpaceID spaceId,
-                                   std::vector<std::string>& keys) {
+                                   folly::fbvector<std::string>& keys) {
     auto tableName = this->spaceIdToTableName(spaceId);
     std::vector<std::string> rowKeys;
     for (size_t i = 0; i < keys.size(); i++) {
@@ -264,10 +264,9 @@ ResultCode HBaseStore::get(GraphSpaceID spaceId,
 
 std::pair<ResultCode, std::vector<Status>> HBaseStore::multiGet(
         GraphSpaceID spaceId,
-        PartitionID partId,
-        const std::vector<std::string>& keys,
+        PartitionID /*partId*/,
+        const folly::fbvector<std::string>& keys,
         std::vector<std::string>* values) {
-    UNUSED(partId);
     auto tableName = this->spaceIdToTableName(spaceId);
     std::vector<std::string> rowKeys;
     for (auto& key : keys) {
@@ -289,29 +288,26 @@ std::pair<ResultCode, std::vector<Status>> HBaseStore::multiGet(
 
 
 ResultCode HBaseStore::range(GraphSpaceID spaceId,
-                             PartitionID partId,
+                             PartitionID /*partId*/,
                              const std::string& start,
                              const std::string& end,
                              std::unique_ptr<KVIterator>* iter) {
-    UNUSED(partId);
     return this->range(spaceId, start, end, iter);
 }
 
 
 ResultCode HBaseStore::prefix(GraphSpaceID spaceId,
-                              PartitionID partId,
+                              PartitionID /*partId*/,
                               const std::string& prefix,
                               std::unique_ptr<KVIterator>* iter) {
-    UNUSED(partId);
     return this->prefix(spaceId, prefix, iter);
 }
 
 
 void HBaseStore::asyncMultiPut(GraphSpaceID spaceId,
-                               PartitionID partId,
-                               std::vector<KV> keyValues,
+                               PartitionID /*partId*/,
+                               folly::fbvector<KV> keyValues,
                                KVCallback cb) {
-    UNUSED(partId);
     auto multiPut = [this, &spaceId, &keyValues] () -> ResultCode {
         auto tableName = this->spaceIdToTableName(spaceId);
         std::vector<std::pair<std::string, std::vector<KV>>> dataList;
@@ -349,25 +345,23 @@ void HBaseStore::asyncRemove(GraphSpaceID spaceId,
 
 
 void HBaseStore::asyncMultiRemove(GraphSpaceID spaceId,
-                                  PartitionID  partId,
-                                  std::vector<std::string> keys,
+                                  PartitionID  /*partId*/,
+                                  folly::fbvector<std::string> keys,
                                   KVCallback cb) {
-    UNUSED(partId);
     return cb(this->multiRemove(spaceId, keys));
 }
 
 
 void HBaseStore::asyncRemoveRange(GraphSpaceID spaceId,
-                                  PartitionID partId,
+                                  PartitionID /*partId*/,
                                   const std::string& start,
                                   const std::string& end,
                                   KVCallback cb) {
-    UNUSED(partId);
     auto removeRange = [this, &spaceId, &start, &end] () -> ResultCode {
         std::unique_ptr<kvstore::KVIterator> iter;
         ResultCode rangeCode = this->range(spaceId, start, end, &iter);
         if (rangeCode == ResultCode::SUCCEEDED) {
-            std::vector<std::string> keys;
+            folly::fbvector<std::string> keys;
             while (iter->valid()) {
                 keys.emplace_back(iter->key());
                 iter->next();
@@ -395,7 +389,7 @@ void HBaseStore::asyncRemovePrefix(GraphSpaceID spaceId,
         std::unique_ptr<kvstore::KVIterator> iter;
         ResultCode prefixCode = this->prefix(spaceId, prefix, &iter);
         if (prefixCode == ResultCode::SUCCEEDED) {
-            std::vector<std::string> keys;
+            folly::fbvector<std::string> keys;
             while (iter->valid()) {
                 keys.emplace_back(iter->key());
                 iter->next();

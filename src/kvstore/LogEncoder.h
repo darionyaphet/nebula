@@ -39,15 +39,15 @@ std::pair<folly::StringPiece, folly::StringPiece> decodeKV(const std::string& da
 std::string encodeSingleValue(LogType type, folly::StringPiece val);
 folly::StringPiece decodeSingleValue(folly::StringPiece encoded);
 
-std::string encodeMultiValues(LogType type, const std::vector<std::string>& values);
-std::string encodeMultiValues(LogType type, const std::vector<KV>& kvs);
+std::string encodeMultiValues(LogType type, const folly::fbvector<std::string>& values);
+std::string encodeMultiValues(LogType type, const folly::fbvector<KV>& kvs);
 std::string encodeMultiValues(LogType type,
                               folly::StringPiece v1,
                               folly::StringPiece v2);
 std::vector<folly::StringPiece> decodeMultiValues(folly::StringPiece encoded);
 
 std::string
-encodeBatchValue(const std::vector<std::tuple<BatchLogType, std::string, std::string>>& batch);
+encodeBatchValue(const folly::fbvector<std::tuple<BatchLogType, std::string, std::string>>& batch);
 
 std::vector<std::pair<BatchLogType, std::pair<folly::StringPiece, folly::StringPiece>>>
 decodeBatchValue(folly::StringPiece encoded);
@@ -88,12 +88,12 @@ public:
         batch_.clear();
     }
 
-    const std::vector<std::tuple<BatchLogType, std::string, std::string>>& getBatch() {
+    const folly::fbvector<std::tuple<BatchLogType, std::string, std::string>>& getBatch() {
         return batch_;
     }
 
 private:
-    std::vector<std::tuple<BatchLogType, std::string, std::string>> batch_;
+    folly::fbvector<std::tuple<BatchLogType, std::string, std::string>> batch_;
 };
 }  // namespace kvstore
 }  // namespace nebula

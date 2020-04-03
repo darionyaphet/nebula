@@ -28,7 +28,7 @@ void AddEdgesProcessor::process(const cpp2::AddEdgesRequest& req) {
     if (indexes_.empty()) {
         std::for_each(req.parts.begin(), req.parts.end(), [&](auto& partEdges) {
             auto partId = partEdges.first;
-            std::vector<kvstore::KV> data;
+            folly::fbvector<kvstore::KV> data;
             std::for_each(partEdges.second.begin(), partEdges.second.end(), [&](auto& edge) {
                 VLOG(3) << "PartitionID: " << partId << ", VertexID: " << edge.key.src
                         << ", EdgeType: " << edge.key.edge_type << ", EdgeRanking: "

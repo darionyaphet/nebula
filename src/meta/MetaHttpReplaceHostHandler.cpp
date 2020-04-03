@@ -136,7 +136,7 @@ bool MetaHttpReplaceHostHandler::replaceHost(IPv4 ipv4From, IPv4 ipv4To) {
     }
     LOG(INFO) << "allSpaceId.size()=" << allSpaceId.size();
 
-    std::vector<nebula::kvstore::KV> data;
+    folly::fbvector<nebula::kvstore::KV> data;
     for (const auto& spaceId : allSpaceId) {
         const auto& partPrefix = MetaServiceUtils::partPrefix(spaceId);
         kvRet = kvstore_->prefix(kDefaultSpaceId, kDefaultPartId, partPrefix, &iter);

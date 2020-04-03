@@ -16,8 +16,7 @@ DEFINE_int32(removed_threshold_sec, 24 * 60 * 60,
 namespace nebula {
 namespace meta {
 
-void ListHostsProcessor::process(const cpp2::ListHostsReq& req) {
-    UNUSED(req);
+void ListHostsProcessor::process(const cpp2::ListHostsReq& /*req*/) {
     {
         folly::SharedMutex::ReadHolder rHolder(LockUtils::spaceLock());
         auto spaceRet = getSpaceIdNameMap();
@@ -46,7 +45,7 @@ Status ListHostsProcessor::allHostsWithStatus() {
     }
 
     auto now = time::WallClock::fastNowInMilliSec();
-    std::vector<std::string> removeHostsKey;
+    folly::fbvector<std::string> removeHostsKey;
     while (iter->valid()) {
         cpp2::HostItem item;
         auto host = MetaServiceUtils::parseHostKey(iter->key());

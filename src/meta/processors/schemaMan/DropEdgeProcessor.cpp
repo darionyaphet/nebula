@@ -52,9 +52,9 @@ void DropEdgeProcessor::process(const cpp2::DropEdgeReq& req) {
     doSyncMultiRemoveAndUpdate(std::move(keys));
 }
 
-StatusOr<std::vector<std::string>> DropEdgeProcessor::getEdgeKeys(GraphSpaceID id,
-                                                                  EdgeType edgeType) {
-    std::vector<std::string> keys;
+StatusOr<folly::fbvector<std::string>> DropEdgeProcessor::getEdgeKeys(GraphSpaceID id,
+                                                                      EdgeType edgeType) {
+    folly::fbvector<std::string> keys;
     auto key = MetaServiceUtils::schemaEdgePrefix(id, edgeType);
     auto iterRet = doPrefix(key);
     if (!iterRet.ok()) {

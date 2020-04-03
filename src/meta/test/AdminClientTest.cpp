@@ -209,7 +209,7 @@ TEST(AdminClientTest, RetryTest) {
         thriftPeers.back().set_ip(localIp);
         thriftPeers.back().set_port(sc1->port_);
 
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         data.emplace_back(MetaServiceUtils::partKey(0, 1),
                           MetaServiceUtils::partVal(thriftPeers));
         folly::Baton<true, std::atomic> baton;

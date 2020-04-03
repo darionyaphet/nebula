@@ -147,7 +147,7 @@ ResultCode RocksEngine::get(const std::string& key, std::string* value) {
 }
 
 
-std::vector<Status> RocksEngine::multiGet(const std::vector<std::string>& keys,
+std::vector<Status> RocksEngine::multiGet(const folly::fbvector<std::string>& keys,
                                           std::vector<std::string>* values) {
     rocksdb::ReadOptions options;
     std::vector<rocksdb::Slice> slices;
@@ -222,7 +222,7 @@ ResultCode RocksEngine::put(std::string key, std::string value) {
 }
 
 
-ResultCode RocksEngine::multiPut(std::vector<KV> keyValues) {
+ResultCode RocksEngine::multiPut(folly::fbvector<KV> keyValues) {
     rocksdb::WriteBatch updates(FLAGS_rocksdb_batch_size);
     for (size_t i = 0; i < keyValues.size(); i++) {
         updates.Put(keyValues[i].first, keyValues[i].second);
@@ -252,7 +252,7 @@ ResultCode RocksEngine::remove(const std::string& key) {
 }
 
 
-ResultCode RocksEngine::multiRemove(std::vector<std::string> keys) {
+ResultCode RocksEngine::multiRemove(folly::fbvector<std::string> keys) {
     rocksdb::WriteBatch deletes(FLAGS_rocksdb_batch_size);
     for (size_t i = 0; i < keys.size(); i++) {
         deletes.Delete(keys[i]);

@@ -249,10 +249,10 @@ public:
         properties.set_partition_num(partitionNum);
         properties.set_replica_factor(replica);
         auto spaceVal = MetaServiceUtils::spaceVal(properties);
-        std::vector<nebula::kvstore::KV> data;
+        folly::fbvector<nebula::kvstore::KV> data;
         data.emplace_back(MetaServiceUtils::spaceKey(id), MetaServiceUtils::spaceVal(properties));
 
-        std::vector<nebula::cpp2::HostAddr> allHosts;
+        folly::fbvector<nebula::cpp2::HostAddr> allHosts;
         for (int i = 0; i < totalHost; i++) {
             nebula::cpp2::HostAddr address;
             address.set_ip(i);
@@ -280,7 +280,7 @@ public:
     }
 
     static void mockTag(kvstore::KVStore* kv, int32_t tagNum, SchemaVer version = 0) {
-        std::vector<nebula::kvstore::KV> tags;
+        folly::fbvector<nebula::kvstore::KV> tags;
         SchemaVer ver = version;
         for (auto t = 0; t < tagNum; t++) {
             TagID tagId = t;
@@ -307,7 +307,7 @@ public:
     }
 
     static void mockEdge(kvstore::KVStore* kv, int32_t edgeNum, SchemaVer version = 0) {
-        std::vector<nebula::kvstore::KV> edges;
+        folly::fbvector<nebula::kvstore::KV> edges;
         SchemaVer ver = version;
         for (auto t = 0; t < edgeNum; t++) {
             EdgeType edgeType = t;

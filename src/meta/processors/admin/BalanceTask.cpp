@@ -222,7 +222,7 @@ void BalanceTask::rollback() {
 
 bool BalanceTask::saveInStore() {
     if (kv_) {
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         data.emplace_back(taskKey(), taskVal());
         folly::Baton<true, std::atomic> baton;
         bool ret = false;

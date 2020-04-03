@@ -48,7 +48,7 @@ void CreateEdgeProcessor::process(const cpp2::CreateEdgeReq& req) {
         return;
     }
     auto edgeType = nebula::value(edgeTypeRet);
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(MetaServiceUtils::indexEdgeKey(req.get_space_id(), edgeName),
                       std::string(reinterpret_cast<const char*>(&edgeType), sizeof(EdgeType)));
     data.emplace_back(MetaServiceUtils::schemaEdgeKey(req.get_space_id(), edgeType, 0),

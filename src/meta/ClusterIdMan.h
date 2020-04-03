@@ -100,7 +100,7 @@ public:
                             const std::string& key,
                             ClusterID clusterId) {
         CHECK_NOTNULL(kv);
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         data.emplace_back(key,
                           std::string(reinterpret_cast<char*>(&clusterId), sizeof(ClusterID)));
         bool ret = true;

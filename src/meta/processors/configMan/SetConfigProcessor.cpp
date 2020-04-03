@@ -39,7 +39,7 @@ std::unordered_set<std::string> SetConfigProcessor::mutableFields_ = {
 };
 
 void SetConfigProcessor::process(const cpp2::SetConfigReq& req) {
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     auto module = req.get_item().get_module();
     auto name = req.get_item().get_name();
     auto type = req.get_item().get_type();
@@ -102,7 +102,7 @@ cpp2::ErrorCode SetConfigProcessor::setOneConfig(const cpp2::ConfigModule& modul
                                                  const std::string& name,
                                                  const cpp2::ConfigType& type,
                                                  const std::string& value,
-                                                 std::vector<kvstore::KV>& data) {
+                                                 folly::fbvector<kvstore::KV>& data) {
     std::string configKey = MetaServiceUtils::configKey(module, name);
     auto ret = doGet(std::move(configKey));
     if (!ret.ok()) {
@@ -123,7 +123,7 @@ cpp2::ErrorCode SetConfigProcessor::setNestedConfig(const cpp2::ConfigModule& mo
                                                     const std::string& name,
                                                     const cpp2::ConfigType& type,
                                                     const std::string& updateList,
-                                                    std::vector<kvstore::KV>& data) {
+                                                    folly::fbvector<kvstore::KV>& data) {
     std::string configKey = MetaServiceUtils::configKey(module, name);
     auto ret = doGet(std::move(configKey));
     if (!ret.ok()) {

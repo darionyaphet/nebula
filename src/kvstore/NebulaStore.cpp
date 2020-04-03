@@ -376,7 +376,7 @@ ResultCode NebulaStore::get(GraphSpaceID spaceId,
 std::pair<ResultCode, std::vector<Status>> NebulaStore::multiGet(
         GraphSpaceID spaceId,
         PartitionID partId,
-        const std::vector<std::string>& keys,
+        const folly::fbvector<std::string>& keys,
         std::vector<std::string>* values) {
     std::vector<Status> status;
     auto ret = part(spaceId, partId);
@@ -473,7 +473,7 @@ ResultCode NebulaStore::sync(GraphSpaceID spaceId,
 
 void NebulaStore::asyncMultiPut(GraphSpaceID spaceId,
                                 PartitionID partId,
-                                std::vector<KV> keyValues,
+                                folly::fbvector<KV> keyValues,
                                 KVCallback cb) {
     auto ret = part(spaceId, partId);
     if (!ok(ret)) {
@@ -501,7 +501,7 @@ void NebulaStore::asyncRemove(GraphSpaceID spaceId,
 
 void NebulaStore::asyncMultiRemove(GraphSpaceID spaceId,
                                    PartitionID  partId,
-                                   std::vector<std::string> keys,
+                                   folly::fbvector<std::string> keys,
                                    KVCallback cb) {
     auto ret = part(spaceId, partId);
     if (!ok(ret)) {

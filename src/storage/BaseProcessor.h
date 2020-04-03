@@ -57,13 +57,13 @@ protected:
         delete this;
     }
 
-    void doPut(GraphSpaceID spaceId, PartitionID partId, std::vector<kvstore::KV> data);
+    void doPut(GraphSpaceID spaceId, PartitionID partId, folly::fbvector<kvstore::KV> data);
 
     kvstore::ResultCode doSyncPut(GraphSpaceID spaceId,
                                   PartitionID partId,
-                                  std::vector<kvstore::KV> data);
+                                  folly::fbvector<kvstore::KV> data);
 
-    void doRemove(GraphSpaceID spaceId, PartitionID partId, std::vector<std::string> keys);
+    void doRemove(GraphSpaceID spaceId, PartitionID partId, folly::fbvector<std::string> keys);
 
     kvstore::ResultCode doRange(GraphSpaceID spaceId, PartitionID partId, std::string start,
                                 std::string end, std::unique_ptr<kvstore::KVIterator>* iter);

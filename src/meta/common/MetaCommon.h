@@ -58,10 +58,10 @@ public:
     }
 
     static bool saveRebuildStatus(kvstore::KVStore* kvstore,
-                                  std::string statusKey,
-                                  std::string&& statusValue) {
-        std::vector<kvstore::KV> status{std::make_pair(std::move(statusKey),
-                                                       std::forward<std::string>(statusValue))};
+                                  std::string key,
+                                  std::string&& value) {
+        folly::fbvector<kvstore::KV> status{std::make_pair(std::move(key),
+                                                           std::forward<std::string>(value))};
         folly::Baton<true, std::atomic> baton;
         auto ret = kvstore::ResultCode::SUCCEEDED;
         kvstore->asyncMultiPut(kDefaultSpaceId,

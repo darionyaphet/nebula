@@ -26,7 +26,7 @@ void CreateSnapshotProcessor::process(const cpp2::CreateSnapshotReq&) {
 
     // step 1 : Let recode the snapshot to meta , default snapshot status is CREATING.
     //          The purpose of this is to handle the failure of the checkpoint.
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(MetaServiceUtils::snapshotKey(snapshot),
                       MetaServiceUtils::snapshotVal(cpp2::SnapshotStatus::INVALID,
                                                     NetworkUtils::toHosts(hosts)));

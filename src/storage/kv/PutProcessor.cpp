@@ -17,7 +17,7 @@ void PutProcessor::process(const cpp2::PutRequest& req) {
 
     std::for_each(pairs.begin(), pairs.end(), [&](auto& value) {
         auto part = value.first;
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         for (auto& pair : value.second) {
             data.emplace_back(std::move(NebulaKeyUtils::kvKey(part, pair.key)),
                               std::move(pair.value));

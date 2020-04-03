@@ -49,7 +49,7 @@ void CreateTagProcessor::process(const cpp2::CreateTagReq& req) {
         return;
     }
     auto tagId = nebula::value(tagRet);
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(MetaServiceUtils::indexTagKey(req.get_space_id(), tagName),
                       std::string(reinterpret_cast<const char*>(&tagId), sizeof(TagID)));
     LOG(INFO) << "Create Tag " << tagName << ", tagId " << tagId;

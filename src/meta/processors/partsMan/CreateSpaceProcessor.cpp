@@ -87,7 +87,7 @@ void CreateSpaceProcessor::process(const cpp2::CreateSpaceReq& req) {
         return;
     }
 
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(MetaServiceUtils::indexSpaceKey(spaceName),
                       std::string(reinterpret_cast<const char*>(&spaceId), sizeof(spaceId)));
     data.emplace_back(MetaServiceUtils::spaceKey(spaceId),

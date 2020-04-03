@@ -11,7 +11,7 @@ namespace meta {
 
 void MultiPutProcessor::process(const cpp2::MultiPutReq& req) {
     CHECK_SEGMENT(req.get_segment());
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     for (auto& pair : req.get_pairs()) {
         data.emplace_back(MetaServiceUtils::assembleSegmentKey(req.get_segment(), pair.get_key()),
                           pair.get_value());

@@ -11,7 +11,7 @@ namespace nebula {
 namespace meta {
 
 template<typename RESP>
-void BaseProcessor<RESP>::doPut(std::vector<kvstore::KV> data) {
+void BaseProcessor<RESP>::doPut(folly::fbvector<kvstore::KV> data) {
     folly::Baton<true, std::atomic> baton;
     kvstore_->asyncMultiPut(kDefaultSpaceId,
                             kDefaultPartId,
@@ -54,7 +54,7 @@ StatusOr<std::string> BaseProcessor<RESP>::doGet(const std::string& key) {
 
 template<typename RESP>
 StatusOr<std::vector<std::string>>
-BaseProcessor<RESP>::doMultiGet(const std::vector<std::string>& keys) {
+BaseProcessor<RESP>::doMultiGet(const folly::fbvector<std::string>& keys) {
     std::vector<std::string> values;
     auto ret = kvstore_->multiGet(kDefaultSpaceId, kDefaultPartId, keys, &values);
     if (ret.first != kvstore::ResultCode::SUCCEEDED) {
@@ -80,7 +80,7 @@ void BaseProcessor<RESP>::doRemove(const std::string& key) {
 
 
 template<typename RESP>
-void BaseProcessor<RESP>::doMultiRemove(std::vector<std::string> keys) {
+void BaseProcessor<RESP>::doMultiRemove(folly::fbvector<std::string> keys) {
     folly::Baton<true, std::atomic> baton;
     kvstore_->asyncMultiRemove(kDefaultSpaceId,
                                kDefaultPartId,
@@ -166,7 +166,7 @@ ErrorOr<cpp2::ErrorCode, int32_t> BaseProcessor<RESP>::autoIncrementId() {
         id = *reinterpret_cast<const int32_t*>(val.c_str()) + 1;
     }
 
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(kIdKey,
                       std::string(reinterpret_cast<const char*>(&id), sizeof(id)));
     folly::Baton<true, std::atomic> baton;
@@ -335,7 +335,7 @@ bool BaseProcessor<RESP>::checkPassword(const std::string& account, const std::s
 }
 
 template<typename RESP>
-kvstore::ResultCode BaseProcessor<RESP>::doSyncPut(std::vector<kvstore::KV> data) {
+kvstore::ResultCode BaseProcessor<RESP>::doSyncPut(folly::fbvector<kvstore::KV> data) {
     folly::Baton<true, std::atomic> baton;
     auto ret = kvstore::ResultCode::SUCCEEDED;
     kvstore_->asyncMultiPut(kDefaultSpaceId,
@@ -353,7 +353,7 @@ kvstore::ResultCode BaseProcessor<RESP>::doSyncPut(std::vector<kvstore::KV> data
 }
 
 template<typename RESP>
-void BaseProcessor<RESP>::doSyncPutAndUpdate(std::vector<kvstore::KV> data) {
+void BaseProcessor<RESP>::doSyncPutAndUpdate(folly::fbvector<kvstore::KV> data) {
     folly::Baton<true, std::atomic> baton;
     auto ret = kvstore::ResultCode::SUCCEEDED;
     kvstore_->asyncMultiPut(kDefaultSpaceId,
@@ -378,7 +378,7 @@ void BaseProcessor<RESP>::doSyncPutAndUpdate(std::vector<kvstore::KV> data) {
 }
 
 template<typename RESP>
-void BaseProcessor<RESP>::doSyncMultiRemoveAndUpdate(std::vector<std::string> keys) {
+void BaseProcessor<RESP>::doSyncMultiRemoveAndUpdate(folly::fbvector<std::string> keys) {
     folly::Baton<true, std::atomic> baton;
     auto ret = kvstore::ResultCode::SUCCEEDED;
     kvstore_->asyncMultiRemove(kDefaultSpaceId,

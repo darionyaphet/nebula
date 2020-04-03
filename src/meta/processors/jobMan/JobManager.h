@@ -58,7 +58,7 @@ private:
     nebula::kvstore::ResultCode save(const std::string& k, const std::string& v);
 
     static bool isExpiredJob(const cpp2::JobDesc& jobDesc);
-    void removeExpiredJobs(const std::vector<std::string>& jobKeys);
+    void removeExpiredJobs(const folly::fbvector<std::string>& jobKeys);
     std::unique_ptr<folly::UMPSCQueue<int32_t, true>> queue_;
     std::unique_ptr<thread::GenericWorker> bgThread_;
 

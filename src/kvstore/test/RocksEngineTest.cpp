@@ -27,7 +27,7 @@ TEST(RocksEngineTest, SimpleTest) {
 TEST(RocksEngineTest, RangeTest) {
     fs::TempDir rootPath("/tmp/rocksdb_engine_RangeTest.XXXXXX");
     auto engine = std::make_unique<RocksEngine>(0, rootPath.path());
-    std::vector<KV> data;
+    folly::fbvector<KV> data;
     for (int32_t i = 10; i < 20;  i++) {
         data.emplace_back(std::string(reinterpret_cast<const char*>(&i), sizeof(int32_t)),
                           folly::stringPrintf("val_%d", i));
@@ -71,7 +71,7 @@ TEST(RocksEngineTest, PrefixTest) {
     fs::TempDir rootPath("/tmp/rocksdb_engine_PrefixTest.XXXXXX");
     auto engine = std::make_unique<RocksEngine>(0, rootPath.path());
     LOG(INFO) << "Write data in batch and scan them...";
-    std::vector<KV> data;
+    folly::fbvector<KV> data;
     for (int32_t i = 0; i < 10;  i++) {
         data.emplace_back(folly::stringPrintf("a_%d", i),
                           folly::stringPrintf("val_%d", i));
@@ -189,7 +189,7 @@ TEST(RocksEngineTest, OptionTest) {
 TEST(RocksEngineTest, CompactTest) {
     fs::TempDir rootPath("/tmp/rocksdb_engine_CompactTest.XXXXXX");
     auto engine = std::make_unique<RocksEngine>(0, rootPath.path());
-    std::vector<KV> data;
+    folly::fbvector<KV> data;
     for (int32_t i = 2; i < 8;  i++) {
         data.emplace_back(folly::stringPrintf("key_%d", i),
                           folly::stringPrintf("value_%d", i));

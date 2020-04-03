@@ -19,7 +19,7 @@ namespace storage {
 
 void mockData(kvstore::KVStore* kv) {
     for (PartitionID partId = 0; partId < 3; partId++) {
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         for (VertexID vertexId = partId * 10; vertexId < (partId + 1) * 10; vertexId++) {
             for (TagID tagId = 3001; tagId < 3010; tagId++) {
                 auto key = NebulaKeyUtils::vertexKey(partId, vertexId, tagId, 0);
@@ -63,7 +63,7 @@ void mockData(kvstore::KVStore* kv) {
 
 void mockTTLDataExpired(kvstore::KVStore* kv) {
     for (PartitionID partId = 0; partId < 3; partId++) {
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         for (auto vertexId = partId * 10; vertexId < (partId + 1) * 10; vertexId++) {
             // one tag data, the record data will always expire
             auto tagId = 3001;
@@ -112,7 +112,7 @@ void mockTTLDataNotExpired(kvstore::KVStore* kv) {
     auto tagId = 3001;
     auto edgeType = 101;
     for (PartitionID partId = 0; partId < 3; partId++) {
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         for (auto vertexId = partId * 10; vertexId < (partId + 1) * 10; vertexId++) {
             // one tag data, the record data will never expire
             auto tagkey = NebulaKeyUtils::vertexKey(partId, vertexId, tagId, 0);
@@ -161,7 +161,7 @@ void mockIndexData(kvstore::KVStore* kv) {
     IndexValues values;
     values.emplace_back(nebula::cpp2::SupportedType::STRING, "col1");
     for (PartitionID partId = 0; partId < 3; partId++) {
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         for (auto vertexId = partId * 10; vertexId < (partId + 1) * 10; vertexId++) {
             auto tiKey = NebulaKeyUtils::vertexIndexKey(partId, tagId + 1000, vertexId, values);
             data.emplace_back(std::move(tiKey), "");

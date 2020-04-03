@@ -23,7 +23,7 @@ void DeleteEdgesProcessor::process(const cpp2::DeleteEdgesRequest& req) {
         std::for_each(req.parts.begin(), req.parts.end(), [this](auto &partEdges) {
             this->callingNum_ += partEdges.second.size();
         });
-        std::vector<std::string> keys;
+        folly::fbvector<std::string> keys;
         keys.reserve(16);
         for (auto& partEdges : req.parts) {
             auto partId = partEdges.first;

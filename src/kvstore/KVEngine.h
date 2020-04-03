@@ -53,7 +53,7 @@ public:
 
     // Read a list of keys, if key[i] does not exist, the i-th value in return value
     // would be Status::KeyNotFound
-    virtual std::vector<Status> multiGet(const std::vector<std::string>& keys,
+    virtual std::vector<Status> multiGet(const folly::fbvector<std::string>& keys,
                                          std::vector<std::string>* values) = 0;
 
     // Get all results in range [start, end)
@@ -74,13 +74,13 @@ public:
     virtual ResultCode put(std::string key, std::string value) = 0;
 
     // Get all results with 'prefix' str as prefix.
-    virtual ResultCode multiPut(std::vector<KV> keyValues) = 0;
+    virtual ResultCode multiPut(folly::fbvector<KV> keyValues) = 0;
 
     // Remove a single key
     virtual ResultCode remove(const std::string& key) = 0;
 
     // Remove a batch of keys
-    virtual ResultCode multiRemove(std::vector<std::string> keys) = 0;
+    virtual ResultCode multiRemove(folly::fbvector<std::string> keys) = 0;
 
     // Remove range [start, end)
     virtual ResultCode removeRange(const std::string& start,

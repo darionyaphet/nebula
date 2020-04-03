@@ -34,7 +34,7 @@ void AddVerticesProcessor::process(const cpp2::AddVerticesRequest& req) {
         std::for_each(partVertices.begin(), partVertices.end(), [&](auto& pv) {
             auto partId = pv.first;
             const auto& vertices = pv.second;
-            std::vector<kvstore::KV> data;
+            folly::fbvector<kvstore::KV> data;
             std::for_each(vertices.begin(), vertices.end(), [&](auto& v) {
                 const auto& tags = v.get_tags();
                 std::for_each(tags.begin(), tags.end(), [&](auto& tag) {

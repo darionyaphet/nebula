@@ -22,7 +22,7 @@ void DropSpaceProcessor::process(const cpp2::DropSpaceReq& req) {
 
     auto spaceId = spaceRet.value();
     handleErrorCode(cpp2::ErrorCode::SUCCEEDED);
-    std::vector<std::string> deleteKeys;
+    folly::fbvector<std::string> deleteKeys;
 
     auto prefix = MetaServiceUtils::partPrefix(spaceId);
     std::unique_ptr<kvstore::KVIterator> iter;

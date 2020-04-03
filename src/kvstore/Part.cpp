@@ -69,7 +69,7 @@ void Part::asyncPut(folly::StringPiece key, folly::StringPiece value, KVCallback
 }
 
 
-void Part::asyncMultiPut(const std::vector<KV>& keyValues, KVCallback cb) {
+void Part::asyncMultiPut(const folly::fbvector<KV>& keyValues, KVCallback cb) {
     std::string log = encodeMultiValues(OP_MULTI_PUT, keyValues);
 
     appendAsync(FLAGS_cluster_id, std::move(log))
@@ -89,7 +89,7 @@ void Part::asyncRemove(folly::StringPiece key, KVCallback cb) {
 }
 
 
-void Part::asyncMultiRemove(const std::vector<std::string>& keys, KVCallback cb) {
+void Part::asyncMultiRemove(const folly::fbvector<std::string>& keys, KVCallback cb) {
     std::string log = encodeMultiValues(OP_MULTI_REMOVE, keys);
 
     appendAsync(FLAGS_cluster_id, std::move(log))

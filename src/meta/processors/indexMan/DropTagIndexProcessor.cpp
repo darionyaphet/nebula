@@ -27,7 +27,7 @@ void DropTagIndexProcessor::process(const cpp2::DropTagIndexReq& req) {
         return;
     }
 
-    std::vector<std::string> keys;
+    folly::fbvector<std::string> keys;
     keys.emplace_back(MetaServiceUtils::indexIndexKey(spaceID, indexName));
     keys.emplace_back(MetaServiceUtils::indexKey(spaceID, tagIndexID.value()));
 

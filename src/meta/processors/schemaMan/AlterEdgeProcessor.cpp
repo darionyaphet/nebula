@@ -88,7 +88,7 @@ void AlterEdgeProcessor::process(const cpp2::AlterEdgeReq& req) {
     }
     schema.set_columns(std::move(columns));
 
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     LOG(INFO) << "Alter edge " << req.get_edge_name() << ", edgeType " << edgeType;
     data.emplace_back(MetaServiceUtils::schemaEdgeKey(spaceId, edgeType, version),
                       MetaServiceUtils::schemaEdgeVal(req.get_edge_name(), schema));

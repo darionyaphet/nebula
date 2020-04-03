@@ -41,10 +41,10 @@ public:
     }
 
     void asyncPut(folly::StringPiece key, folly::StringPiece value, KVCallback cb);
-    void asyncMultiPut(const std::vector<KV>& keyValues, KVCallback cb);
+    void asyncMultiPut(const folly::fbvector<KV>& keyValues, KVCallback cb);
 
     void asyncRemove(folly::StringPiece key, KVCallback cb);
-    void asyncMultiRemove(const std::vector<std::string>& keys, KVCallback cb);
+    void asyncMultiRemove(const folly::fbvector<std::string>& keys, KVCallback cb);
     void asyncRemoveRange(folly::StringPiece start,
                           folly::StringPiece end,
                           KVCallback cb);

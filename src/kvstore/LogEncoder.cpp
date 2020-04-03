@@ -61,7 +61,7 @@ folly::StringPiece decodeSingleValue(folly::StringPiece encoded) {
 }
 
 
-std::string encodeMultiValues(LogType type, const std::vector<std::string>& values) {
+std::string encodeMultiValues(LogType type, const folly::fbvector<std::string>& values) {
     size_t totalLen = 0;
     for (auto& v : values) {
         totalLen += (sizeof(uint32_t) + v.size());
@@ -81,15 +81,15 @@ std::string encodeMultiValues(LogType type, const std::vector<std::string>& valu
     // Values
     for (auto& v : values) {
         uint32_t len = v.size();
-        encoded.append(reinterpret_cast<char*>(&len), sizeof(uint32_t));
-        encoded.append(v.data(), len);
+        encoded.append(reinterpret_cast<char*>(&len), sizeof(uint32_t))
+               .append(v.data(), len);
     }
 
     return encoded;
 }
 
 
-std::string encodeMultiValues(LogType type, const std::vector<KV>& kvs) {
+std::string encodeMultiValues(LogType type, const folly::fbvector<KV>& kvs) {
     size_t totalLen = 0;
     for (auto& kv : kvs) {
         totalLen += (2 * sizeof(uint32_t) + kv.first.size() + kv.second.size());
@@ -165,7 +165,7 @@ std::vector<folly::StringPiece> decodeMultiValues(folly::StringPiece encoded) {
 }
 
 std::string
-encodeBatchValue(const std::vector<std::tuple<BatchLogType, std::string, std::string>>& batch) {
+encodeBatchValue(const folly::fbvector<std::tuple<BatchLogType, std::string, std::string>>& batch) {
     auto type = LogType::OP_BATCH_WRITE;
     std::string encoded;
     encoded.reserve(1024);

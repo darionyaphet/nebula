@@ -18,7 +18,7 @@ kvstore::ResultCode ActiveHostsMan::updateHostInfo(kvstore::KVStore* kv,
                                                    const HostInfo& info,
                                                    const LeaderParts* leaderParts) {
     CHECK_NOTNULL(kv);
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(MetaServiceUtils::hostKey(hostAddr.first, hostAddr.second),
                       HostInfo::encode(info));
     if (leaderParts != nullptr) {
@@ -65,7 +65,7 @@ bool ActiveHostsMan::isLived(kvstore::KVStore* kv, const HostAddr& host) {
 
 kvstore::ResultCode LastUpdateTimeMan::update(kvstore::KVStore* kv, const int64_t timeInMilliSec) {
     CHECK_NOTNULL(kv);
-    std::vector<kvstore::KV> data;
+    folly::fbvector<kvstore::KV> data;
     data.emplace_back(MetaServiceUtils::lastUpdateTimeKey(),
                       MetaServiceUtils::lastUpdateTimeVal(timeInMilliSec));
 

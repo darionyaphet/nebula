@@ -175,7 +175,7 @@ void mockData(kvstore::KVStore* kv ,
     auto vindex = indexMan->getTagIndex(spaceId, tagId).value();
     auto eindex = indexMan->getEdgeIndex(spaceId, edgeType).value();
     for (auto partId = 0; partId < 3; partId++) {
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         for (auto vertexId = partId * 10; vertexId < (partId + 1) * 10; vertexId++) {
             auto key = NebulaKeyUtils::vertexKey(partId, vertexId, tagId, 0);
             RowWriter writer;
@@ -376,7 +376,7 @@ static cpp2::LookUpEdgeIndexResp checkLookupEdgesString(const std::string& filte
     sleep(FLAGS_raft_heartbeat_interval_secs);
     {
         for (auto partId = 0; partId < 3; partId++) {
-            std::vector<kvstore::KV> data;
+            folly::fbvector<kvstore::KV> data;
             auto version = std::numeric_limits<int>::max() - 1;
             {
                 VertexID srcId = 1;
@@ -468,7 +468,7 @@ static cpp2::LookUpVertexIndexResp checkLookupVerticesString(const std::string& 
     sleep(FLAGS_raft_heartbeat_interval_secs);
     {
         for (auto partId = 0; partId < 3; partId++) {
-            std::vector<kvstore::KV> data;
+            folly::fbvector<kvstore::KV> data;
             auto version = std::numeric_limits<int>::max() - 1;
             {
                 VertexID vertexId = 100;
@@ -559,7 +559,7 @@ static cpp2::LookUpEdgeIndexResp checkLookupEdgesDouble(const std::string& filte
     sleep(FLAGS_raft_heartbeat_interval_secs);
     {
         for (auto partId = 0; partId < 3; partId++) {
-            std::vector<kvstore::KV> data;
+            folly::fbvector<kvstore::KV> data;
             auto version = std::numeric_limits<int>::max() - 1;
             {
                 VertexID srcId = 1;
@@ -655,7 +655,7 @@ static cpp2::LookUpVertexIndexResp checkLookupVerticesDouble(const std::string& 
     sleep(FLAGS_raft_heartbeat_interval_secs);
     {
         for (auto partId = 0; partId < 3; partId++) {
-            std::vector<kvstore::KV> data;
+            folly::fbvector<kvstore::KV> data;
             auto version = std::numeric_limits<int>::max() - 1;
             {
                 VertexID vertexId = 100;

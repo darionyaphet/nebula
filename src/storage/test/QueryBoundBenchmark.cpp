@@ -32,7 +32,7 @@ namespace storage {
 
 void mockData(kvstore::KVStore* kv) {
     for (PartitionID partId = 0; partId < 6; partId++) {
-        std::vector<kvstore::KV> data;
+        folly::fbvector<kvstore::KV> data;
         for (VertexID vertexId = 1; vertexId < 1000; vertexId++) {
             for (TagID tagId = 3001; tagId < 3010; tagId++) {
                 auto key = NebulaKeyUtils::vertexKey(partId, vertexId, tagId, 0);

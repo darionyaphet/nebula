@@ -99,7 +99,7 @@ TEST(NebulaStoreTest, SimpleTest) {
     VLOG(1) << "Put some data then read them...";
 
     std::string prefix = "prefix";
-    std::vector<KV> data;
+    folly::fbvector<KV> data;
     for (auto i = 0; i < 100; i++) {
         data.emplace_back(prefix + std::string(reinterpret_cast<const char*>(&i),
                                                sizeof(int32_t)),
@@ -323,7 +323,7 @@ TEST(NebulaStoreTest, ThreeCopiesTest) {
     LOG(INFO) << "Put some data then read them...";
     for (int part = 0; part < 3; part++) {
         std::string prefix = "prefix";
-        std::vector<KV> data;
+        folly::fbvector<KV> data;
         for (auto i = 0; i < 100; i++) {
             data.emplace_back(prefix + std::string(reinterpret_cast<const char*>(&i),
                                                    sizeof(int32_t)),
@@ -583,7 +583,7 @@ TEST(NebulaStoreTest, CheckpointTest) {
     VLOG(1) << "Put some data then read them...";
 
     std::string prefix = "prefix";
-    std::vector<KV> data;
+    folly::fbvector<KV> data;
     for (auto i = 0; i < 100; i++) {
         data.emplace_back(prefix + std::string(reinterpret_cast<const char*>(&i),
                                                sizeof(int32_t)),
@@ -683,7 +683,7 @@ TEST(NebulaStoreTest, ThreeCopiesCheckpointTest) {
     LOG(INFO) << "Put some data then read them...";
     for (int part = 0; part < 3; part++) {
         std::string prefix = "prefix";
-        std::vector<KV> data;
+        folly::fbvector<KV> data;
         for (auto i = 0; i < 100; i++) {
             data.emplace_back(prefix + std::string(reinterpret_cast<const char*>(&i),
                                                    sizeof(int32_t)),
