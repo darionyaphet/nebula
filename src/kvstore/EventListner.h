@@ -22,6 +22,14 @@ public:
                   << ", base level is " << info.base_input_level
                   << ", output level is " << info.output_level;
     }
+
+    void OnExternalFileIngested(rocksdb::DB*,
+                                const rocksdb::ExternalFileIngestionInfo& info) override {
+        LOG(INFO) << "Rocksdb ingest column family: " << info.cf_name
+                  << " from " << info.external_file_path
+                  << " to " << info.internal_file_path
+                  << " the global sequence number: " << info.global_seqno;
+    }
 };
 
 }  // namespace kvstore
